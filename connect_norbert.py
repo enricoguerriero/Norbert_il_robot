@@ -30,12 +30,10 @@ while True:
             robot.request_rmmp()
         if(inputvalue == 1):
             print("Move camera and take pictures")
-            while True:
+            for i in range(3):
                 dz_py = input("dz_py: ")
                 robot.set_rapid_variable("dzpy", dz_py)
-                capture_and_save_image(camera_index=0, save_path=f'usb_camera_image{time.time}.jpg')
-                if input("Continue? (y/n): ") == "n":
-                    break
+                capture_and_save_image(camera_index=0, save_path=f'images/usb_camera_image_{i}.jpg')
         elif inputvalue > 1 and inputvalue < 5:
             print("execute action")
         else:
