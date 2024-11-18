@@ -1,8 +1,10 @@
 import requests
 from rwsuis import RWS
 from connect_camera import capture_and_save_image
+from find_qr import detect_qr_code_centers_and_angles
 import time
 from map_puck import give_puck_coordinates
+import cv2
 
 # help(RWS)
 # Step 1: Set up the connection to Norbert
@@ -20,6 +22,7 @@ robot.request_rmmp()
 while True:
     wrd_value = int(robot.get_rapid_variable("WRD"))
     print(wrd_value)
+    
     if wrd_value == 0:
         print("Robot is waiting for Python to set 'WPW'")
         inputvalue = int(input("action: "))
@@ -29,15 +32,49 @@ while True:
         except:
             print("Error: Unable to set 'WPW' variabl1e.")
             robot.request_rmmp()
+            
         if(inputvalue == 1):
             print("Move camera and take pictures")
-            map_vec = []
+            map_dic = {}
             for i in range(3):
                 dz_py = input("dz_py: ")
                 robot.set_rapid_variable("dzpy", dz_py)
-                capture_and_save_image(camera_index=0, save_path=f'images/usb_camera_image_{i}.jpg')
+                print("Taking picture ...")
+                capture_and_save_image(camera_index=1, save_path=f'images/usb_camera_image_{i}.jpg')
+            
+            print("Pictures taken")
+            print("Mapping puck ... ")
+            for i in range(3):
+                image_path = f'images/usb_camera_image_{i}.jpg'
+                image = cv2.imread(image_path)
+                pucks = detect_qr_code_centers_and_angles(image)
+                numbers = [pucks['number'] for pucks in pucks]
+                print(f'Detected QR code numbers: {numbers}')
+                print(f"Detected QR code centers: {pucks['center']}")
+                print(f"Detected QR code angles: {pucks['angle']}")
+                # Calculate the puck coordinates
+                for puck in pucks:
+                    puck_coord = give_puck_coordinates(puck['center'], (0, 0, 370))
+                    if puck["number"] not in map_dic:
+                        map_dic[puck["number"]] = puck_coord
+                    else:
+                        print("Puck already in the dictionary")
+                        print("Computing the mean")
+                        x = (map_dic[puck["number"]][0] + puck_coord[0]) / 2
+                        y = (map_dic[puck["number"]][1] + puck_coord[1]) / 2
+                        map_dic[puck["number"]] = (x, y)
+            print("Puck mapping completed")
+            print("Puck mapped: ", map_dic)
+        
+        if (inputvalue == 2):
+            print("Move to puck")
+            dx = input("dx: ")
+            dy = input("dy: ")
+            dz = input("dz: ")
+            robot.set_rapid_variable("dx", dx)
+            robot.set_rapid_variable("dy", dy)
+            robot.set_rapid_variable("dz", dz)
                 
-                puck_coord_trial = give_puck_coordinates((100, 100), (0, 0, 0))
         elif inputvalue > 1 and inputvalue < 5:
             print("execute action")
         else:
