@@ -29,9 +29,12 @@ def capture_and_save_image(camera_index=1, save_path='usb_camera_image.jpg'):
             print("Error: Failed to save the image")
     else:
         print("Error: Failed to capture image")
-
+        
     # Release the camera resource
     cap.release()
+
+    # Return the picture (maybe useless)
+    return frame
 
 if __name__ == "__main__":
     # Replace '1' with your camera index if different

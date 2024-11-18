@@ -2,6 +2,7 @@ import requests
 from rwsuis import RWS
 from connect_camera import capture_and_save_image
 import time
+from map_puck import give_puck_coordinates
 
 # help(RWS)
 # Step 1: Set up the connection to Norbert
@@ -30,10 +31,13 @@ while True:
             robot.request_rmmp()
         if(inputvalue == 1):
             print("Move camera and take pictures")
+            map_vec = []
             for i in range(3):
                 dz_py = input("dz_py: ")
                 robot.set_rapid_variable("dzpy", dz_py)
                 capture_and_save_image(camera_index=0, save_path=f'images/usb_camera_image_{i}.jpg')
+                
+                puck_coord_trial = give_puck_coordinates((100, 100), (0, 0, 0))
         elif inputvalue > 1 and inputvalue < 5:
             print("execute action")
         else:
