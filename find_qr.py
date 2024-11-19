@@ -49,17 +49,15 @@ def detect_qr_code_centers_and_angles(image):
                 # Convert center coordinates to integers
                 center_x, center_y = int(center[0]), int(center[1])
                 
-                data = obj.data.decode('utf-8')
+                data = obj.data.decode('utf-8')[-1]
                 
                 if not any(data in qr['number'] for qr in results):
                     
-                    number = data[-1]
-                
                     results.append({
                         'center': (center_x, center_y),
                         'angle': angle,
                         'size': size,
-                        'number': number
+                        'number': data
                     })
                     # print(f"QR code {data} detected with color {col} and contrast {contrast}")
 

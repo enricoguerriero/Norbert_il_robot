@@ -28,15 +28,15 @@ while True:
         inputvalue = int(input("action: "))
             
         if(inputvalue == 1):
+            robot.set_rapid_variable("WPW",inputvalue)
             print("Move camera and take pictures")
             map_dic = {}
-            for i in range(5):
-                robot.set_rapid_variable("check", i+1)
-                while int(robot.get_rapid_variable("check")) == i+1:
+            for i in range(1,6):
+                robot.set_rapid_variable("wait", i)
+                while robot.get_rapid_variable("check") == 0:
                     time.sleep(1)
                 print("Taking picture ...")
                 capture_and_save_image(camera_index=1, save_path=f'images/usb_camera_image_{i}.jpg')
-                
                 
             print("Pictures taken")
             print("Mapping puck ... ")
@@ -61,7 +61,8 @@ while True:
                         map_dic[puck["number"]] = (x, y)
             print("Puck mapping completed")
             print("Puck mapped: ", map_dic)
-        
+            robot.set_rapid_variable("WPW",0)
+            
         if (inputvalue == 2):
             print("Move to puck")
             dx = input("dx: ")
@@ -77,10 +78,4 @@ while True:
             print("Invalid input")
             break
         
-        try:
-            robot.set_rapid_variable("WPW",inputvalue)
-            print("WPW set to",inputvalue)
-        except:
-            print("Error: Unable to set 'WPW' variabl1e.")
-            robot.request_rmmp()
 
