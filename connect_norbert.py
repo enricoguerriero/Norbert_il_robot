@@ -32,15 +32,26 @@ while True:
             print("Move camera and take pictures")
             map_dic = {}
             for i in range(1,6):
-                robot.set_rapid_variable("wait", i)
-                while robot.get_rapid_variable("check") == 0:
-                    time.sleep(1)
+                # print(i)
+                # robot.set_rapid_variable("Wait", i)
+                print("Sleeping...")
+                time.sleep(4.5)
+                # check = int(robot.get_rapid_variable("check"))
+                # print(check)
+                # while check == 0:
+                #     check = int(robot.get_rapid_variable("check"))
+                #     print("sleep... zzz... zzz...")
+                #     time.sleep(3)
                 print("Taking picture ...")
+                start = time.time()
                 capture_and_save_image(camera_index=1, save_path=f'images/usb_camera_image_{i}.jpg')
-                
+                end = time.time()
+                delta = end - start
+                print(f'Tempo di una foto: {delta}')
+
             print("Pictures taken")
             print("Mapping puck ... ")
-            cam_position = [(0, 0, 370), (-100, -100, 370), (-100, 100, 370), (100, 100, 370), (100, -100, 370)]
+            cam_position = [(0, 0, 300), (-100, -100, 370), (-100, 100, 370), (100, 100, 370), (100, -100, 370)]
             for i in range(5):
                 image_path = f'images/usb_camera_image_{i}.jpg'
                 image = cv2.imread(image_path)
@@ -53,8 +64,10 @@ while True:
                     if puck["number"] not in map_dic:
                         map_dic[puck["number"]] = puck_coord
                     else:
+                        continue
                         print("Puck already in the dictionary")
-                        print(f"Difference between the two coordinates: {map_dic[puck['number']]} - {puck_coord}")
+                        diff = (map_dic[puck['number']][0] - puck_coord[0],map_dic[puck['number']][1] - puck_coord[1])
+                        print(f"Difference between the two coordinates: {diff}")
                         print("Computing the mean")
                         x = (map_dic[puck["number"]][0] + puck_coord[0]) / 2
                         y = (map_dic[puck["number"]][1] + puck_coord[1]) / 2
@@ -63,14 +76,29 @@ while True:
             print("Puck mapped: ", map_dic)
             robot.set_rapid_variable("WPW",0)
             
-        if (inputvalue == 2):
+        elif (inputvalue == 3):
             print("Move to puck")
             dx = input("dx: ")
             dy = input("dy: ")
             dz = input("dz: ")
-            robot.set_rapid_variable("dx", dx)
-            robot.set_rapid_variable("dy", dy)
-            robot.set_rapid_variable("dz", dz)
+            robot.set_rapid_variable("dx1py", dx)
+            robot.set_rapid_variable("dy1py", dy)
+            robot.set_rapid_variable("dz1py", dz)
+            robot.set_rapid_variable("WPW",inputvalue)
+            time.sleep(5)
+            robot.set_rapid_variable("WPW",0)
+        
+        elif (inputvalue == 4):
+            print("Move to puck")
+            dx = input("dx: ")
+            dy = input("dy: ")
+            dz = input("dz: ")
+            robot.set_rapid_variable("dx1py", dx)
+            robot.set_rapid_variable("dy1py", dy)
+            robot.set_rapid_variable("dz1py", dz)
+            robot.set_rapid_variable("WPW",inputvalue)
+            time.sleep(5)
+            robot.set_rapid_variable("WPW",0)
             
         elif inputvalue > 1 and inputvalue < 5:
             print("execute action")

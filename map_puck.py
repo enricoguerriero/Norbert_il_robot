@@ -31,14 +31,16 @@ def give_puck_coordinates(pixel_puck, camera_coord, image_width, image_height, s
     c_y = image_height / 2
 
     # Adjust pixel coordinates to be centered
-    x_prime = pixel_puck[0] - c_x
-    y_prime = pixel_puck[1] - c_y
+    x_prime = -(pixel_puck[0] - c_x)
+    y_prime = -(c_y - pixel_puck[1])
 
     # Physical coordinates on the table plane
     X = camera_coord[0] + (x_prime * camera_coord[2]) / f_x
     Y = camera_coord[1] + (y_prime * camera_coord[2]) / f_y
 
     puck_coord = (X, Y)
+
+    # correct respect to camera position
 
     return puck_coord
 
@@ -47,34 +49,34 @@ def give_puck_coordinates(pixel_puck, camera_coord, image_width, image_height, s
 
 if __name__ == "__main__":
     
-    image_paths = ['Norbert_il_robot/images/usb_camera_image_n50_2.jpg', 'Norbert_il_robot/images/usb_camera_image_2.jpg',
-        'Norbert_il_robot/images/usb_camera_image_50_2.jpg']
+    image_paths = ['Norbert_il_robot/images/usb_camera_image_0.jpg', 'Norbert_il_robot/images/usb_camera_image_1.jpg',
+                   'Norbert_il_robot/images/usb_camera_image_2.jpg', 'Norbert_il_robot/images/usb_camera_image_3.jpg',
+                   'Norbert_il_robot/images/usb_camera_image_4.jpg']
     
-    results_storage = []
+    print("Mapping puck ... ")
+    map_dic = {}
+    cam_dif = 0
     
-    for idx, image_path in enumerate(image_paths):
-        # Load the image using OpenCV
+    cam_position = [(0+cam_dif, 0, 370), (-100+cam_dif, -100, 370), (100+cam_dif, -100, 370), (100+cam_dif, 100, 370), (100+cam_dif, -100, 370)]
+    for i in range(5):
+        image_path = f'images/usb_camera_image_{i}.jpg'
         image = cv2.imread(image_path)
-        
-        # Print the dimension of the image
-        # print(f"Image dimensions: {image.shape}")
-    
-        # Detect QR codes in the original image
-        results = detect_qr_code_centers_and_angles(image)
+        pucks = detect_qr_code_centers_and_angles(image)
+        numbers = [puck['number'] for puck in pucks]
+        print(f'Detected QR code numbers: {numbers}')
 
-        # print(f"Results for image '{image_path}':")        
-        # for result in results:
-        #     result['center'] = (result['center'][0], result['center'][1])
-        #     result['perspective'] = 50 * (idx-1)
-        #     result['puck_coord'] = give_puck_coordinates(result['center'], (50*(idx-1), 50*(idx-1), 400))
-        #     print(result)            
-        # print("-" * 50, "\n")
-        
-        results_storage.extend(results)
-        
-        print(f'Results with the second method for image {image_path}:')
-        for result in results:
-            result['puck_coord_2'] = give_puck_coordinates(result['center'], (-50*(idx-1), 50*(idx-1), 370), image.shape[1], image.shape[0], 3.63, 2.72, 3.7)
-            print(result['number'], ": ", result['puck_coord_2'])
-        
+        for puck in pucks:
+            puck_coord = give_puck_coordinates(puck['center'], cam_position[i], image.shape[1], image.shape[0], 3.68, 2.76, 3.7)
+            if puck["number"] not in map_dic:
+                map_dic[puck["number"]] = puck_coord
+            else:
+                print("Puck already in the dictionary")
+                diff = (map_dic[puck['number']][0] - puck_coord[0],map_dic[puck['number']][1] - puck_coord[1])
+                print(f"Difference for puck {puck['number']} between the two coordinates: {diff}")
+                print("Computing the mean")
+                x = (map_dic[puck["number"]][0] + puck_coord[0]) / 2
+                y = (map_dic[puck["number"]][1] + puck_coord[1]) / 2
+                map_dic[puck["number"]] = (x, y)
+    print("Puck mapping completed")
+    print("Puck mapped: ", map_dic)
         
