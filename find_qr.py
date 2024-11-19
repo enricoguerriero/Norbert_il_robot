@@ -66,7 +66,7 @@ def detect_qr_code_centers_and_angles(image):
 
 def main():
     # Path to your image containing QR codes
-    image_path = 'Norbert_il_robot/images/usb_camera_image_n50_3.jpg' 
+    image_path = 'images/usb_camera_image_0.jpg' 
 
     # Load the image using OpenCV
     image = cv2.imread(image_path)

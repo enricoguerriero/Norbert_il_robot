@@ -31,14 +31,14 @@ def give_puck_coordinates(pixel_puck, camera_coord, image_width, image_height, s
     c_y = image_height / 2
 
     # Adjust pixel coordinates to be centered
-    x_prime = -(pixel_puck[0] - c_x)
-    y_prime = -(c_y - pixel_puck[1])
+    y_prime = -(pixel_puck[0] - c_x)
+    x_prime = -(c_y - pixel_puck[1])
 
     # Physical coordinates on the table plane
     X = camera_coord[0] + (x_prime * camera_coord[2]) / f_x
     Y = camera_coord[1] + (y_prime * camera_coord[2]) / f_y
 
-    puck_coord = (X, Y)
+    puck_coord = (X-3.45, Y+14.95)
 
     # correct respect to camera position
 
@@ -49,15 +49,15 @@ def give_puck_coordinates(pixel_puck, camera_coord, image_width, image_height, s
 
 if __name__ == "__main__":
     
-    image_paths = ['Norbert_il_robot/images/usb_camera_image_0.jpg', 'Norbert_il_robot/images/usb_camera_image_1.jpg',
-                   'Norbert_il_robot/images/usb_camera_image_2.jpg', 'Norbert_il_robot/images/usb_camera_image_3.jpg',
-                   'Norbert_il_robot/images/usb_camera_image_4.jpg']
+    image_paths = ['images/usb_camera_image_1.jpg',
+                   'images/usb_camera_image_2.jpg', 'images/usb_camera_image_3.jpg',
+                   'images/usb_camera_image_4.jpg', 'images/usb_camera_image_5.jpg']
     
     print("Mapping puck ... ")
     map_dic = {}
     cam_dif = 0
     
-    cam_position = [(0+cam_dif, 0, 370), (-100+cam_dif, -100, 370), (100+cam_dif, -100, 370), (100+cam_dif, 100, 370), (100+cam_dif, -100, 370)]
+    cam_position = [(0+cam_dif, 0, 370), (-100+cam_dif, -100, 370), (-100+cam_dif, 100, 370), (100+cam_dif, 100, 370), (100+cam_dif, -100, 370)]
     for i in range(5):
         image_path = f'images/usb_camera_image_{i}.jpg'
         image = cv2.imread(image_path)

@@ -20,6 +20,7 @@ robot = RWS.RWS(norbert_ip)
 # Step 2: Read the WRD (or any other robtarget variable) and display its initial state
 robot.request_rmmp()
 while True:
+    time.sleep(3)
     wrd_value = int(robot.get_rapid_variable("WRD"))
     print(wrd_value)
     
@@ -31,7 +32,7 @@ while True:
             robot.set_rapid_variable("WPW",inputvalue)
             print("Move camera and take pictures")
             map_dic = {}
-            for i in range(1,6):
+            for i in range(5):
                 # print(i)
                 # robot.set_rapid_variable("Wait", i)
                 print("Sleeping...")
@@ -51,7 +52,7 @@ while True:
 
             print("Pictures taken")
             print("Mapping puck ... ")
-            cam_position = [(0, 0, 300), (-100, -100, 370), (-100, 100, 370), (100, 100, 370), (100, -100, 370)]
+            cam_position = [(0, 0, 370), (-100, -100, 370), (-100, 100, 370), (100, 100, 370), (100, -100, 370)]
             for i in range(5):
                 image_path = f'images/usb_camera_image_{i}.jpg'
                 image = cv2.imread(image_path)
