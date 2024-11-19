@@ -40,11 +40,38 @@ def calibrate_camera(images, chessboard_size=(7, 7), square_size=1.0, display_co
         if img is None:
             print(f"Warning: Unable to read image '{fname}'. Skipping.")
             continue
+        
+        # lwr = np.array([0, 0, 103])
+        # upr = np.array([179, 61, 252])
+        # hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
+        # msk = cv.inRange(hsv, lwr, upr)
+
+        # # Extract chess-board
+        # krn = cv.getStructuringElement(cv.MORPH_RECT, (50, 30))
+        # dlt = cv.dilate(msk, krn, iterations=5)
+        # res = 255 - cv.bitwise_and(dlt, msk)
+
+        # # Displaying chess-board features
+        # res = np.uint8(res)
+
+        img = cv.resize(img, (int(img.shape[1]/2), int(img.shape[0]/2)))
 
         gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+        
+        gray = cv.equalizeHist(gray)
+
+        # binary with fixed threshold        
+        # gray = cv.adaptiveThreshold(gray, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 11, 2)
+        # _, gray = cv.threshold(gray, 120, 255, cv.THRESH_BINARY)
+        
+        cv.imshow('Equalized Image', gray)
+        cv.waitKey(0)
+        cv.destroyAllWindows()
+        
+        flags = cv.CALIB_CB_EXHAUSTIVE + cv.CALIB_CB_ACCURACY
 
         # Find the chessboard corners
-        ret, corners = cv.findChessboardCorners(gray, chessboard_size, None)
+        ret, corners = cv.findChessboardCorners(gray, chessboard_size, flags=None)
 
         # If corners are found, refine and add to the list
         if ret:
@@ -169,7 +196,7 @@ def main():
     display_detected_corners = True  # Set to True to visualize detected corners
 
     # Get list of calibration images
-    images = glob.glob(os.path.join(calibration_images_directory, '*.jpg'))
+    images = glob.glob(os.path.join(calibration_images_directory, '*.png'))
 
     if not images:
         print(f"No images found in directory: {calibration_images_directory}")

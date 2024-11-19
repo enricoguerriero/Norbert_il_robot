@@ -26,39 +26,35 @@ while True:
     if wrd_value == 0:
         print("Robot is waiting for Python to set 'WPW'")
         inputvalue = int(input("action: "))
-        try:
-            robot.set_rapid_variable("WPW",inputvalue)
-            print("WPW set to",inputvalue)
-        except:
-            print("Error: Unable to set 'WPW' variabl1e.")
-            robot.request_rmmp()
             
         if(inputvalue == 1):
             print("Move camera and take pictures")
             map_dic = {}
-            for i in range(3):
-                dz_py = input("dz_py: ")
-                robot.set_rapid_variable("dzpy", dz_py)
+            for i in range(5):
+                robot.set_rapid_variable("check", i+1)
+                while int(robot.get_rapid_variable("check")) == i+1:
+                    time.sleep(1)
                 print("Taking picture ...")
                 capture_and_save_image(camera_index=1, save_path=f'images/usb_camera_image_{i}.jpg')
-            
+                
+                
             print("Pictures taken")
             print("Mapping puck ... ")
-            for i in range(3):
+            cam_position = [(0, 0, 370), (-100, -100, 370), (-100, 100, 370), (100, 100, 370), (100, -100, 370)]
+            for i in range(5):
                 image_path = f'images/usb_camera_image_{i}.jpg'
                 image = cv2.imread(image_path)
                 pucks = detect_qr_code_centers_and_angles(image)
-                numbers = [pucks['number'] for pucks in pucks]
+                numbers = [puck['number'] for puck in pucks]
                 print(f'Detected QR code numbers: {numbers}')
-                print(f"Detected QR code centers: {pucks['center']}")
-                print(f"Detected QR code angles: {pucks['angle']}")
-                # Calculate the puck coordinates
+
                 for puck in pucks:
-                    puck_coord = give_puck_coordinates(puck['center'], (0, 0, 370))
+                    puck_coord = give_puck_coordinates(puck['center'], cam_position[i], image.shape[1], image.shape[0], 3.68, 2.76, 3.7)
                     if puck["number"] not in map_dic:
                         map_dic[puck["number"]] = puck_coord
                     else:
                         print("Puck already in the dictionary")
+                        print(f"Difference between the two coordinates: {map_dic[puck['number']]} - {puck_coord}")
                         print("Computing the mean")
                         x = (map_dic[puck["number"]][0] + puck_coord[0]) / 2
                         y = (map_dic[puck["number"]][1] + puck_coord[1]) / 2
@@ -74,10 +70,17 @@ while True:
             robot.set_rapid_variable("dx", dx)
             robot.set_rapid_variable("dy", dy)
             robot.set_rapid_variable("dz", dz)
-                
+            
         elif inputvalue > 1 and inputvalue < 5:
             print("execute action")
         else:
             print("Invalid input")
             break
+        
+        try:
+            robot.set_rapid_variable("WPW",inputvalue)
+            print("WPW set to",inputvalue)
+        except:
+            print("Error: Unable to set 'WPW' variabl1e.")
+            robot.request_rmmp()
 

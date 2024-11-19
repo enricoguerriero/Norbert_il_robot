@@ -2,22 +2,22 @@ from find_qr import detect_qr_code_centers_and_angles
 import cv2
 
 
-def give_puck_coordinates(pixel_puck, camera_coord):
-    '''
-    naive method for puck coordinates
-    '''   
+# def give_puck_coordinates(pixel_puck, camera_coord):
+#     '''
+#     naive method for puck coordinates
+#     '''   
     
-    focal_length = 3.7 # mm + 5% err
+#     focal_length = 3.7 # mm + 5% err
     
-    picture_center = (480, 640) # to check !!!
+#     picture_center = (480, 640) # to check !!!
     
-    pixel_coord = (pixel_puck[0] - picture_center[0], pixel_puck[1] - picture_center[1])
+#     pixel_coord = (pixel_puck[0] - picture_center[0], pixel_puck[1] - picture_center[1])
     
-    puck_coord = (pixel_coord[0] * camera_coord[2] / focal_length - camera_coord[0], pixel_coord[1] * camera_coord[2] / focal_length - camera_coord[1])
+#     puck_coord = (pixel_coord[0] * camera_coord[2] / focal_length - camera_coord[0], pixel_coord[1] * camera_coord[2] / focal_length - camera_coord[1])
     
-    return puck_coord
+#     return puck_coord
 
-def give_puck_coordinates_2(pixel_puck, camera_coord, image_width, image_height, sensor_width_mm, sensor_height_mm, focal_length_mm):
+def give_puck_coordinates(pixel_puck, camera_coord, image_width, image_height, sensor_width_mm, sensor_height_mm, focal_length_mm):
     '''
     Improved method for calculating puck coordinates on the table.
     '''
@@ -38,7 +38,7 @@ def give_puck_coordinates_2(pixel_puck, camera_coord, image_width, image_height,
     X = camera_coord[0] + (x_prime * camera_coord[2]) / f_x
     Y = camera_coord[1] + (y_prime * camera_coord[2]) / f_y
 
-    puck_coord = (X + 53, Y)
+    puck_coord = (X, Y)
 
     return puck_coord
 
@@ -74,7 +74,7 @@ if __name__ == "__main__":
         
         print(f'Results with the second method for image {image_path}:')
         for result in results:
-            result['puck_coord_2'] = give_puck_coordinates_2(result['center'], (-50*(idx-1), 50*(idx-1), 370), image.shape[1], image.shape[0], 3.63, 2.72, 3.7)
+            result['puck_coord_2'] = give_puck_coordinates(result['center'], (-50*(idx-1), 50*(idx-1), 370), image.shape[1], image.shape[0], 3.63, 2.72, 3.7)
             print(result['number'], ": ", result['puck_coord_2'])
         
         
