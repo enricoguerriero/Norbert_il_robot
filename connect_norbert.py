@@ -52,7 +52,7 @@ while True:
 
             print("Pictures taken")
             print("Mapping puck ... ")
-            cam_position = [(0, 0, 370), (-100, -100, 370), (-100, 100, 370), (100, 100, 370), (100, -100, 370)]
+            cam_position = [(0, 0, 470), (-100, -100, 470), (-100, 100, 470), (100, 100, 470), (100, -100, 470)]
             for i in range(5):
                 image_path = f'images/usb_camera_image_{i}.jpg'
                 image = cv2.imread(image_path)
@@ -65,7 +65,6 @@ while True:
                     if puck["number"] not in map_dic:
                         map_dic[puck["number"]] = puck_coord
                     else:
-                        continue
                         print("Puck already in the dictionary")
                         diff = (map_dic[puck['number']][0] - puck_coord[0],map_dic[puck['number']][1] - puck_coord[1])
                         print(f"Difference between the two coordinates: {diff}")
