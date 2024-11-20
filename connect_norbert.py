@@ -4,6 +4,7 @@ from connect_camera import capture_and_save_image
 from find_qr import detect_qr_code_centers_and_angles
 import time
 from map_puck import give_puck_coordinates
+from find_qrgood import detect_qr_codes
 import cv2
 
 # help(RWS)
@@ -57,14 +58,14 @@ while True:
             for i in range(5):
                 image_path = f'images/usb_camera_image_{i}.jpg'
                 image = cv2.imread(image_path)
-                pucks = detect_qr_code_centers_and_angles(image)
+                pucks = detect_qr_codes(image)
                 numbers = [puck['number'] for puck in pucks]
                 print(f'Detected QR code numbers: {numbers}')
 
                 for puck in pucks:
                     puck_coord = give_puck_coordinates(puck['center'], cam_position[i], image.shape[1], image.shape[0], 3.68, 2.76, 3.7)
                     if puck["number"] not in map_dic:
-                        map_dic[puck["number"]] = puck_coord
+                        map_dic[puck["number"]] = (puck_coord[0], puck_coord[1], 0)
                         angle_dic[puck["number"]] = puck["angle"]
                     else:
                         print("Puck already in the dictionary")
@@ -87,11 +88,12 @@ while True:
             robot.set_rapid_variable("index", 0)
             robot.set_rapid_variable("WPW",inputvalue)
             for puck in map_dic.keys():
+                time.sleep(1)
                 print(f"Rotating puck {puck}")
                 robot.set_rapid_variable("dx1py", map_dic[puck][0])
                 robot.set_rapid_variable("dy1py", map_dic[puck][1])
                 robot.set_rapid_variable("dz1py", map_dic[puck][2])
-                robot.set_rapid_variable("anglepy", angle_dic[puck])
+                robot.set_rapid_variable("anglepy", round(angle_dic[puck]))
                 robot.set_rapid_variable("index", 1)
                 angle_dic[puck] = 0
                 time.sleep(5)
