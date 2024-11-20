@@ -82,8 +82,9 @@ def enhance_image(image):
     
     return enhanced_versions
 
-def detect_qr_codes(image):
-    original_frame = cv2.imread(image_path)
+def detect_qr_codes(original_frame):
+    #original_frame = cv2.imread(image)
+    results = []
     if original_frame is None:
         print("Failed to load image")
         return
@@ -93,7 +94,7 @@ def detect_qr_codes(image):
     frame = original_frame.copy()
         
     # Get enhanced versions
-    enhanced_versions = enhance_image(image)
+    enhanced_versions = enhance_image(original_frame)
         
     # Try to detect QR codes in each enhanced version
     for idx, enhanced in enumerate(enhanced_versions):
@@ -121,13 +122,14 @@ def detect_qr_codes(image):
                         center, size, angle = rect
                         center_x, center_y = int(center[0]), int(center[1])
                         
+                        
                         results.append({
-                        'center': (center_x, center_y),
-                        'angle': angle,
-                        'size': size,
-                        'number': qr_data
+                            'center': (center_x, center_y),
+                            'angle': angle,
+                            'size': size,
+                            'number': qr_data[-1]
                         })
-                        print(results)
+                        #print(results)
     
             # Draw results on original image
             for box_points in all_polygons:
@@ -144,21 +146,21 @@ def detect_qr_codes(image):
             
             #print(f"\nTotal unique QR codes detected: {len(detected_qrs)}")
             
-            # Save and display results
-            output_path = f"detected_qr_codes.png"
-            cv2.imwrite(output_path, frame)
-            print(f"Image saved as '{output_path}'")
+    # Save and display results
+    output_path = f"detected_qr_codes.png"
+    cv2.imwrite(output_path, frame)
+    print(f"Image saved as '{output_path}'")
             
-            # Display results
-            cv2.imshow("Detected QR Codes", frame)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
+    # Display results
+    cv2.imshow("Detected QR Codes", frame)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
             
-            return(results)
+    return(results)
     
 def main():
     # Path to your image containing QR codes
-    image_path = 'Norbert_il_robot/images/usb_camera_image_n50_3.jpg' 
+    image_path = 'Applied-Robot-Technologies/Norbert_il_robot/images/usb_camera_image_4.jpg' 
     # Load the image using OpenCV
     image = cv2.imread(image_path)
 
@@ -190,5 +192,4 @@ def main():
     cv2.destroyAllWindows()
     
 if __name__ == "__main__":
-    results = {}
     main()
