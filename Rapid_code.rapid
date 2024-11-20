@@ -1,0 +1,287 @@
+MODULE E458GripperTest
+    ! Module for testing gripper, UiS KS Nov. 29, 2018
+    
+    PERS tooldata tCamera:=[TRUE,[[-50,0,50],[0,0,0,1]],[1,[-0.095984607,0.082520613,38.69176324],[1,0,0,0],0,0,0]];
+
+    ! wobj in the middle of the table, x-axis along short side of table, y-axis along long axis
+	TASK PERS wobjdata wobjTableN:=[FALSE,TRUE,"",[[150,-500,8],[0.707106781,0,0,-0.707106781]],[[0,0,0],[1,0,0,0]]];
+    PERS tooldata tGripper:=[TRUE,[[0,0,114.25],[0,0,0,1]],[1,[-0.095984607,0.082520613,38.69176324],[1,0,0,0],0,0,0]];
+    
+    ! Make the first version of the RAPID program by including the parts explained in section 5.1. 
+    ! The missing program parts should be filled in. The MovePuck function and the CloseGripper function 
+    ! can initially be as in assignment RS3, but should eventually be modified to be robust. The tool 
+    ! tCamera should have a different offset than the tGripper but may initially have the same orientation. 
+    ! Simply use a ruler to measure the offset as well as you can. The report should contain the line of RAPID 
+    ! code that defines tCamera and a confirmation that the program runs in simulation without error doing Test01.
+    
+    ! robtargets
+	CONST robtarget table_center:=[[0,0,0],[0,1,0,0],[0,0,0,0],[9E9,9E9,9E9,9E9,9E9,9E9]];
+	! CONST robtarget target_K1:=[[0,-200,0],[0,1,0,0],[0,0,0,0],[9E9,9E9,9E9,9E9,9E9,9E9]];
+	! CONST robtarget target_K2:=[[-200,200,0],[0,1,0,0],[0,0,0,0],[9E9,9E9,9E9,9E9,9E9,9E9]];
+    CONST speeddata vFast := v1000;
+    CONST speeddata vSlow := v200;   
+    CONST speeddata vVerySlow := v50;
+    CONST num puckHeight := 30;
+    CONST num safeHeight := 250;
+    CONST num cameraDefaultHeight := 500;
+    
+    VAR num WRD := 0;
+    VAR num WPW := 0;
+    VAR robtarget p1:=[[0,0,0],[0,1,0,0],[0,0,0,0],[9E9,9E9,9E9,9E9,9E9,9E9]];
+    VAR robtarget p2:=[[0,0,0],[0,1,0,0],[0,0,0,0],[9E9,9E9,9E9,9E9,9E9,9E9]];
+    VAR robtarget p3:=[[0,0,0],[0,1,0,0],[0,0,0,0],[9E9,9E9,9E9,9E9,9E9,9E9]]; 
+
+    VAR num dx:=0;
+    VAR num dy:=0;
+    VAR num dz:=cameraDefaultHeight;
+
+    VAR num dx1py:=0;
+    VAR num dy1py:=0;
+    VAR num dz1py:=0;
+    VAR num dx2py:=0;
+    VAR num dy2py:=0;
+    VAR num dz2py:=0;
+    VAR num dx3py:=0;
+    VAR num dy3py:=0;
+    VAR num dz3py:=0;
+    VAR num dx4py:=0;
+    VAR num dy4py:=0;
+    VAR num dz4py:=0;
+    VAR num dx5py:=0;
+    VAR num dy5py:=0;
+    VAR num dz5py:=0;
+    VAR num dx6py:=0;
+    VAR num dy6py:=0;
+    VAR num dz6py:=0;
+    VAR num dx7py:=0;
+    VAR num dy7py:=0;
+    VAR num dz7py:=0;
+
+    VAR num check:=0;
+
+    VAR num Wait := 0;
+    VAR num anglepy:= 0;
+    
+    VAR num numqr :=0;
+    VAR num index := 0;
+    VAR num count := 0;
+    
+   PROC main() 
+       TPWrite "MainLoop starts"; 
+       WHILE TRUE DO 
+           WRD := 0; ! robot does nothing, waits 
+           IF (WPW = 0) THEN 
+               TPWrite "Robot waits for Python to set WPW"; 
+           ENDIF
+            ! TestPendant;
+            WaitUntil (WPW <> 0); 
+            TPWrite "Python wants to do task WPW = "\Num:=WPW; 
+            WRD := WPW; 
+            WPW := 0; 
+            TEST WRD 
+            CASE-1: RETURN; ! Quit MainLoop 
+            CASE 0: WaitTime 0.1; ! Hmmm, should not happen 
+            !CASE 0: moveCamAction;
+	        CASE 1: mapPucks;
+            CASE 2: rotatePucks;
+            CASE 3: pickPuckAction;
+            CASE 4: putPuckAction;
+            CASE 5: invPosAction;
+            CASE 6: doStack;
+            DEFAULT: TPWrite "Error";
+            ENDTEST
+        ENDWHILE 
+    ENDPROC   
+    
+    PROC TestPendant()                     
+        TPReadFK WPW,"Choose action to do","quit()","moveCam()","pickPuck()","putPuck()","invPos()";
+        WPW := WPW - 1;
+        IF WPW = 0 THEN
+            WPW := -1;
+        ENDIF
+    ENDPROC
+    
+    PROC closeGripper(bool state)
+        WaitTime 0.2;
+        IF state=TRUE THEN
+          SetDO AirValve1, 1;
+          SetDO AirValve2, 0;
+        ELSEIF state=FALSE THEN
+          SetDO AirValve1, 0;
+          SetDO AirValve2, 1;
+        ENDIF
+        WaitTime 1.2;
+    ENDPROC
+    
+    PROC rotatePucks()      
+        WHILE count < numqr DO
+            WaitUntil (index <> 0);
+            p1.trans.x:= dx1py;
+            p1.trans.y:= dy1py;
+            p1.trans.z:= dz1py;
+            
+            MoveJ Offs(p1, 0, 0, safeHeight),vSlow,z10,tGripper\WObj:=wobjTableN;
+            MoveJ Offs(p1, 30, 0, puckHeight),vVerySlow,z10,tGripper\WObj:=wobjTableN;
+    	    MoveL Offs(p1, 0, 0, 10),vVerySlow,fine,tGripper\WObj:=wobjTableN;    
+            closeGripper(TRUE);        
+    	    MoveL Offs(p1, 0, 0, puckHeight+30),vVerySlow,z10,tGripper\WObj:=wobjTableN;
+            MoveJ RelTool(p1, 0, 0, puckHeight+30, \Rx:= 0, \Ry:= 0, \Rz:= anglepy), vVerySlow, z200, tGripper\WObj:=wobjTableN;
+            WaitTime 0.5;
+            !MoveL Offs(p1, 0, 0, puckHeight+30),vVerySlow,z10,tGripper\WObj:=wobjTableN;
+    	    MoveL Offs(p1, 0, 0, 10),vVerySlow,fine,tGripper\WObj:=wobjTableN;
+            closeGripper(FALSE);        
+    	    MoveL Offs(p1, 0, 0, safeHeight),vVerySlow,z10,tGripper\WObj:=wobjTableN;
+            count:=count+1;
+            index:=0;
+        ENDWHILE
+    ENDPROC
+
+    PROC mapPucks() 
+        TPWrite "executing moveCam() ..."; 
+        Wait := 1;
+        !check := 0;
+        WHILE Wait < 6 DO
+        !FOR i FROM 1 TO Dim(5, 1) STEP 1 DO
+            TPWrite "Asking python if is ok = "\Num:=Wait;
+            !check := 0;
+            !WaitUntil (check <> 0);
+            IF Wait > 6 THEN
+                TPWrite "Error";
+    	    ELSEIF Wait = 1 THEN
+                MoveJ Offs(table_center,0,0,cameraDefaultHeight),vFast,z1,tCamera\WObj:=wobjTableN;
+    	    ELSEIF Wait = 2 THEN
+    	 	    MoveJ Offs(table_center,-100,-100,cameraDefaultHeight),vFast,z1,tCamera\WObj:=wobjTableN;
+    	    ELSEIF Wait = 3 THEN
+    		    MoveJ Offs(table_center,-100,100,cameraDefaultHeight),vFast,z1,tCamera\WObj:=wobjTableN;
+    	    ELSEIF Wait = 4 THEN
+    		    MoveJ Offs(table_center,100,100,cameraDefaultHeight),vFast,z1,tCamera\WObj:=wobjTableN;
+     	    ELSEIF Wait = 5 THEN
+    		    MoveJ Offs(table_center,100,-100,cameraDefaultHeight),vFast,z1,tCamera\WObj:=wobjTableN;
+    	    ENDIF
+            WaitTime 13;
+            Wait := Wait+1;
+            !check := 1;
+        ENDWHILE
+    ENDPROC
+    
+    PROC moveCamAction() 
+        TPWrite "executing moveCam() ..."; 
+        Wait := 0;
+        WHILE Wait < 3 DO
+            TPWrite "Asking python dz variable = "\Num:=dz1py;
+            WaitUntil (dz1py <> 0); 
+            MoveJ Offs(table_center,dx,dy,dz1py),vFast,z1,tCamera\WObj:=wobjTableN;
+            Wait := Wait+1;
+            dz1py := 0;
+        ENDWHILE
+    ENDPROC
+    
+    PROC pickPuckAction() 
+        p1.trans.x:= dx1py;
+        p1.trans.y:= dy1py;
+        p1.trans.z:= dz1py;
+	
+	    TPWrite "executing pickPuck() ..."; 
+        getPuck p1;
+        MoveJ Offs(p1, 0, 0, safeHeight),vFast,z10,tGripper\WObj:=wobjTableN;
+    ENDPROC
+    
+    PROC putPuckAction() 
+	    TPWrite "Waiting for python ...";
+
+        p1.trans.x:= dx1py;
+        p1.trans.y:= dy1py;
+        p1.trans.z:= dz1py;
+
+        TPWrite "executing putPuck() ..."; 
+        MoveJ Offs(p1, 0, 0, safeHeight),vFast,z10,tGripper\WObj:=wobjTableN;
+        putPuck p1;
+    ENDPROC
+    
+    PROC invPosAction() 
+        VAR robtarget temp;
+        TPWrite "executing invPos() ..."; 
+	    p1.trans.x:= dx1py;
+        p1.trans.y:= dy1py;
+        p1.trans.z:= dz1py;
+	    p2.trans.x:= dx2py;
+        p2.trans.y:= dy2py;
+        p2.trans.z:= dz2py;
+	    p3.trans.x:= dx3py;
+        p3.trans.y:= dy3py;
+        p3.trans.z:= dz3py;
+
+    	t_movePuck(p1), p3;
+    	t_movePuck(p2), p1;
+    	t_movePuck(p3), p2;
+
+        p3 := p1;
+        p1 := p2;
+        p2 := p3;
+    ENDPROC
+    
+    !useless
+    PROC movePuckAction() 
+        TPWrite "executing movePuck() ..."; 
+        t_movePuck p2, p1;
+        WaitTime 1; 
+        t_movePuck p1, p2;
+    ENDPROC
+    
+    PROC t_movePuck(robtarget fromPos, robtarget toPos)
+        ! moves a puck from position given by fromPosNo to position given by toPosNo
+        ! num array nOnPos keeps the number of pucks in each position
+        getPuck(Offs(fromPos,0,0,0));
+        putPuck(Offs(toPos,0,0,0));
+    ENDPROC
+    
+    PROC movePuck()
+	    MoveJ Offs(table_center, 0, 0, 200),v500,z10,tGripper\WObj:=wobjTableN;
+        WaitTime 1.0;   
+        getPuck(p1);
+        putPuck(p2);
+	    MoveJ Offs(table_center, 0, 0, 200),v500,z10,tGripper\WObj:=wobjTableN;
+        WaitTime 1.0;   
+        getPuck(p2);
+        putPuck(p1);
+	    MoveJ Offs(table_center, 0, 0, 200),v500,z10,tGripper\WObj:=wobjTableN;
+        WaitTime 1.0;   
+    ENDPROC
+    
+    PROC getPuck(robtarget pos)
+        MoveJ Offs(pos, 0, 0, safeHeight),vFast,z10,tGripper\WObj:=wobjTableN;
+        MoveJ Offs(pos, 30, 0, puckHeight),vFast,z10,tGripper\WObj:=wobjTableN;
+	    MoveL Offs(pos, 0, 0, 10),vVerySlow,fine,tGripper\WObj:=wobjTableN;    
+        closeGripper(TRUE);        
+	    MoveL Offs(pos, 0, 0, safeHeight),vFast,z10,tGripper\WObj:=wobjTableN;
+    ENDPROC
+
+    PROC putPuck(robtarget pos)
+        MoveJ Offs(pos, 0, 0, puckHeight),vFast,z10,tGripper\WObj:=wobjTableN;
+	    MoveL Offs(pos, 0, 0, 10),vSlow,fine,tGripper\WObj:=wobjTableN;
+        MoveL RelTool(pos, 0, 0, 0, \Rz:= -90), vFast, z200, tGripper\WObj:=wobjTableN;
+        closeGripper(FALSE);        
+	    MoveL Offs(pos, 0, 0, safeHeight),vFast,z10,tGripper\WObj:=wobjTableN;
+    ENDPROC
+
+    PROC doStack()
+        count:= 0;
+        MoveJ Offs(table_center, 0, 0, safeHeight),vFast,z10,tGripper\WObj:=wobjTableN;
+        WHILE count < numqr DO
+            WaitUntil (index <> 0);
+            p1.trans.x := dx1py;
+            p1.trans.y := dy1py;
+            p1.trans.z := dz1py;
+            p2.trans.x := dx2py;
+            p2.trans.y := dy2py;
+            p2.trans.z := dz2py;
+            
+            MoveJ Offs(p1, 0, 0, safeHeight),vFast,z10,tGripper\WObj:=wobjTableN;
+            MoveJ Offs(p1, 30, 0, puckHeight),vFast,z10,tGripper\WObj:=wobjTableN;
+    	    MoveL Offs(p1, 0, 0, 10),vVerySlow,fine,tGripper\WObj:=wobjTableN;    
+            closeGripper(TRUE);        
+    	    MoveL Offs(p1, 0, 0, safeHeight),vFast,z10,tGripper\WObj:=wobjTableN;
+            
+        ENDWHILE
+    ENDPROC 
+ENDMODULE
