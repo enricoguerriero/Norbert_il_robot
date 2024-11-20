@@ -32,6 +32,7 @@ while True:
             robot.set_rapid_variable("WPW",inputvalue)
             print("Move camera and take pictures")
             map_dic = {}
+            angle_dic = {}
             for i in range(5):
                 # print(i)
                 # robot.set_rapid_variable("Wait", i)
@@ -64,6 +65,7 @@ while True:
                     puck_coord = give_puck_coordinates(puck['center'], cam_position[i], image.shape[1], image.shape[0], 3.68, 2.76, 3.7)
                     if puck["number"] not in map_dic:
                         map_dic[puck["number"]] = puck_coord
+                        angle_dic[puck["number"]] = puck["angle"]
                     else:
                         print("Puck already in the dictionary")
                         diff = (map_dic[puck['number']][0] - puck_coord[0],map_dic[puck['number']][1] - puck_coord[1])
@@ -71,10 +73,30 @@ while True:
                         print("Computing the mean")
                         x = (map_dic[puck["number"]][0] + puck_coord[0]) / 2
                         y = (map_dic[puck["number"]][1] + puck_coord[1]) / 2
-                        map_dic[puck["number"]] = (x, y)
+                        angle = (angle_dic[puck["number"]] + puck["angle"]) / 2
+                        map_dic[puck["number"]] = (x, y, 0)
+                        angle_dic[puck["number"]] = angle
             print("Puck mapping completed")
             print("Puck mapped: ", map_dic)
+            print("Puck angle: ", angle_dic)
             robot.set_rapid_variable("WPW",0)
+            
+        elif (inputvalue == 2):
+            # Rotate pucks
+            robot.set_rapid_variable("numqr", len(map_dic))
+            robot.set_rapid_variable("index", 0)
+            robot.set_rapid_variable("WPW",inputvalue)
+            for puck in map_dic.keys():
+                while int(robot.get_rapid_variable("index")) == 0:
+                    time.sleep(1)
+                print(f"Rotating puck {puck}")
+                robot.set_rapid_variable("dx1py", map_dic[puck][0])
+                robot.set_rapid_variable("dy1py", map_dic[puck][1])
+                robot.set_rapid_variable("dz1py", map_dic[puck][2])
+                robot.set_rapid_variable("anglepy", angle_dic[puck])
+                robot.set_rapid_variable("index", 1)
+                angle_dic[puck] = 0
+                time.sleep(5)
             
         elif (inputvalue == 3):
             print("Move to puck")
