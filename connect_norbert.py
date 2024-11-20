@@ -46,7 +46,7 @@ while True:
                 #     time.sleep(3)
                 print("Taking picture ...")
                 start = time.time()
-                capture_and_save_image(camera_index=1, save_path=f'images/usb_camera_image_{i}.jpg')
+                capture_and_save_image(camera_index=0, save_path=f'images/usb_camera_image_{i}.jpg')
                 end = time.time()
                 delta = end - start
                 print(f'Tempo di una foto: {delta}')
@@ -122,8 +122,43 @@ while True:
             time.sleep(5)
             robot.set_rapid_variable("WPW",0)
             
-        elif inputvalue > 1 and inputvalue < 5:
-            print("execute action")
+        elif (inputvalue == 5):
+            print("Input value 5")
+        
+        elif (inputvalue == 6):
+            print("\n--- Create a stack ---\n")
+            robot.set_rapid_variable("numqr", len(map_dic))
+            robot.set_rapid_variable("index", 0)
+            robot.set_rapid_variable("WPW",inputvalue)
+            n_puck = 0
+            for puck in map_dic.keys():
+                time.sleep(1)
+                print(f"Creating stack for puck {puck}")
+                robot.set_rapid_variable("dx1py", map_dic[puck][0])
+                robot.set_rapid_variable("dy1py", map_dic[puck][1])
+                robot.set_rapid_variable("dz1py", map_dic[puck][2])
+                robot.set_rapid_variable("anglepy", angle_dic[puck])
+                # check if (0,0) is free
+                if any(abs(map_dic[puck][0]) < 20 and abs(map_dic[puck][1]) < 20 for puck in map_dic.keys()):    
+                    robot.set_rapid_variable("dx2py", 0)
+                    robot.set_rapid_variable("dy2py", 0)
+                    robot.set_rapid_variable("dz2py", 0 + n_puck * 30)
+                else:
+                    print("Origin is not free for building the stack, give me custom coordinates")
+                    dx = input("dx: ")
+                    dy = input("dy: ")
+                    robot.set_rapid_variable("dx2py", dx)
+                    robot.set_rapid_variable("dy2py", dy)
+                    robot.set_rapid_variable("dz2py", 0 + n_puck * 30)                    
+                n_puck += 1
+                
+                robot.set_rapid_variable("index", 1)
+                angle_dic[puck] = 0
+                time.sleep(5)
+                while int(robot.get_rapid_variable("index")) == 1:
+                    time.sleep(1)
+            
+     
         else:
             print("Invalid input")
             break
