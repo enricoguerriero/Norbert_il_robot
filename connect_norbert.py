@@ -87,8 +87,6 @@ while True:
             robot.set_rapid_variable("index", 0)
             robot.set_rapid_variable("WPW",inputvalue)
             for puck in map_dic.keys():
-                while int(robot.get_rapid_variable("index")) == 0:
-                    time.sleep(1)
                 print(f"Rotating puck {puck}")
                 robot.set_rapid_variable("dx1py", map_dic[puck][0])
                 robot.set_rapid_variable("dy1py", map_dic[puck][1])
@@ -97,6 +95,8 @@ while True:
                 robot.set_rapid_variable("index", 1)
                 angle_dic[puck] = 0
                 time.sleep(5)
+                while int(robot.get_rapid_variable("index")) == 1:
+                    time.sleep(1)
             
         elif (inputvalue == 3):
             print("Move to puck")
