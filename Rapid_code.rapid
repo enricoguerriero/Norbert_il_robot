@@ -31,6 +31,9 @@ MODULE E458GripperTest
     VAR robtarget p2:=[[0,0,0],[0,1,0,0],[0,0,0,0],[9E9,9E9,9E9,9E9,9E9,9E9]];
     VAR robtarget p3:=[[0,0,0],[0,1,0,0],[0,0,0,0],[9E9,9E9,9E9,9E9,9E9,9E9]]; 
     VAR robtarget rotated_p1:=[[0,0,0],[0,1,0,0],[0,0,0,0],[9E9,9E9,9E9,9E9,9E9,9E9]]; 
+    VAR robtarget start:=[[0,0,400],[0,1,0,0],[0,0,0,0],[9E9,9E9,9E9,9E9,9E9,9E9]];
+
+    
 
     VAR num dx:=0;
     VAR num dy:=0;
@@ -42,6 +45,10 @@ MODULE E458GripperTest
     VAR num dx2py:=0;
     VAR num dy2py:=0;
     VAR num dz2py:=0;
+    VAR num dx3py:=0;
+    VAR num dy3py:=0;
+    VAR num dz3py:=0;
+    
 
     VAR num check:=0;
 
@@ -52,10 +59,12 @@ MODULE E458GripperTest
     VAR num index := 0;
     VAR num count := 0;
     VAR num gripper_py := 0;
-    VAR num stop := 0;
+    VAR num stop_py := 0;
     
    PROC main() 
        TPWrite "MainLoop starts"; 
+       TPWrite "Moving to Safe Height before starting";
+       MoveJ start,vSlow,z10,tGripper\WObj:=wobjTableN;
        WHILE TRUE DO 
            WRD := 0; ! robot does nothing, waits 
            IF (WPW = 0) THEN 
@@ -79,6 +88,8 @@ MODULE E458GripperTest
             CASE 7: changeGripperState;
             CASE 8: movePuck;
             CASE 9: takePicture;
+            CASE 10: mapWithMatrices;
+            CASE 11: setOrigin;
             DEFAULT: TPWrite "Error";
             ENDTEST
         ENDWHILE 
@@ -88,7 +99,7 @@ MODULE E458GripperTest
         TPReadFK WPW,"Choose action to do","quit()","moveCam()","pickPuck()","putPuck()","invPos()";
         WPW := WPW - 1;
         IF WPW = 0 THEN
-            WPW := -1;
+            WPW := WPW-1;
         ENDIF
     ENDPROC
     
@@ -114,14 +125,15 @@ MODULE E458GripperTest
             rotated_p1 := p1;
             
             MoveJ Offs(p1, 0, 0, safeHeight),vSlow,z10,tGripper\WObj:=wobjTableN;
-            MoveJ Offs(p1, 30, 0, puckHeight),vVerySlow,z10,tGripper\WObj:=wobjTableN;
-    	    MoveL Offs(p1, 0, 0, 10),vVerySlow,fine,tGripper\WObj:=wobjTableN;    
+    	    MoveL Offs(p1, 0, 0, 30),vVerySlow,z10,tGripper\WObj:=wobjTableN;
+    	    MoveL Offs(p1, 30, 0, 30),vVerySlow,z10,tGripper\WObj:=wobjTableN;
+    	    MoveL Offs(p1, 30, 0, 10),vVerySlow,z10,tGripper\WObj:=wobjTableN;
+    	    MoveL Offs(p1, 0, 0, 10),vVerySlow,z10,tGripper\WObj:=wobjTableN;
+            WaitTime 1;
             closeGripper(TRUE);        
-    	    MoveL Offs(p1, 0, 0, puckHeight+30),vVerySlow,z10,tGripper\WObj:=wobjTableN;
-            MoveJ RelTool(p1, 0, 0, puckHeight+30, \Rx:= 0, \Ry:= 0, \Rz:= anglepy), vVerySlow, z200, tGripper\WObj:=wobjTableN;
-            WaitTime 0.5;
-            !MoveL Offs(p1, 0, 0, puckHeight+30),vVerySlow,z10,tGripper\WObj:=wobjTableN;
-    	    MoveL Offs(p1, 0, 0, 10),vVerySlow,fine,tGripper\WObj:=wobjTableN;
+            MoveJ RelTool(p1, 0, 0, -30, \Rx:= 0, \Ry:= 0, \Rz:= anglepy), vVerySlow, z200, tGripper\WObj:=wobjTableN;
+            MoveJ RelTool(p1, 0, 0, -10, \Rx:= 0, \Ry:= 0, \Rz:= anglepy), vVerySlow, z200, tGripper\WObj:=wobjTableN;
+            WaitTime 1;
             closeGripper(FALSE);        
     	    MoveL Offs(p1, 0, 0, safeHeight),vVerySlow,z10,tGripper\WObj:=wobjTableN;
             count:=count+1;
@@ -132,7 +144,6 @@ MODULE E458GripperTest
     PROC mapPucks() 
         TPWrite "executing moveCam() ..."; 
         Wait := 1;
-        index := 0;
         WHILE Wait < 6 DO
             TPWrite "Asking python if is ok = "\Num:=Wait;
             WaitUntil (index <> 0);
@@ -204,10 +215,6 @@ MODULE E458GripperTest
     	t_movePuck(p1), p3;
     	t_movePuck(p2), p1;
     	t_movePuck(p3), p2;
-
-        p3 := p1;
-        p1 := p2;
-        p2 := p3;
     ENDPROC
     
     !useless
@@ -232,10 +239,6 @@ MODULE E458GripperTest
         putPuck(p2);
 	    MoveJ Offs(table_center, 0, 0, 200),v500,z10,tGripper\WObj:=wobjTableN;
         WaitTime 1.0;   
-        getPuck(p2);
-        putPuck(p1);
-	    MoveJ Offs(table_center, 0, 0, 200),v500,z10,tGripper\WObj:=wobjTableN;
-        WaitTime 1.0;   
     ENDPROC
     
     PROC getPuck(robtarget pos)
@@ -249,7 +252,6 @@ MODULE E458GripperTest
     PROC putPuck(robtarget pos)
         MoveJ Offs(pos, 0, 0, puckHeight),vFast,z10,tGripper\WObj:=wobjTableN;
 	    MoveL Offs(pos, 0, 0, 10),vSlow,fine,tGripper\WObj:=wobjTableN;
-        MoveL RelTool(pos, 0, 0, 0, \Rz:= -90), vFast, z200, tGripper\WObj:=wobjTableN;
         closeGripper(FALSE);        
 	    MoveL Offs(pos, 0, 0, safeHeight),vFast,z10,tGripper\WObj:=wobjTableN;
     ENDPROC
@@ -266,17 +268,21 @@ MODULE E458GripperTest
             p2.trans.y := dy2py;
             p2.trans.z := dz2py;
             
-            MoveJ Offs(p1, 0, 0, puckHeight),vFast,z10,tGripper\WObj:=wobjTableN;
-            MoveJ Offs(p1, 30, 0, puckHeight),vFast,z10,tGripper\WObj:=wobjTableN;
-            MoveJ Offs(p1, 30, 0, 10),vFast,z10,tGripper\WObj:=wobjTableN;
-    	    MoveL Offs(p1, 0, 0, 10),vVerySlow,fine,tGripper\WObj:=wobjTableN;    
-            closeGripper(TRUE);        
-    	    MoveL Offs(p1, 0, 0, safeHeight),vFast,z10,tGripper\WObj:=wobjTableN;
+            getPuck p1;
+            MoveJ Offs(p1, 0, 0, safeHeight),vFast,z10,tGripper\WObj:=wobjTableN;
+            putPuck p2;
+            
+            !MoveJ Offs(p1, 0, 0, puckHeight),vSlow,z10,tGripper\WObj:=wobjTableN;
+            !MoveJ Offs(p1, 30, 0, puckHeight),vSlow,z10,tGripper\WObj:=wobjTableN;
+            !MoveJ Offs(p1, 30, 0, 10),vSlow,z10,tGripper\WObj:=wobjTableN;
+    	    !MoveL Offs(p1, 0, 0, 10),vSlow,fine,tGripper\WObj:=wobjTableN;    
+            !closeGripper(TRUE);        
+    	    !MoveL Offs(p1, 0, 0, safeHeight),vSlow,z10,tGripper\WObj:=wobjTableN;
 
-            MoveJ Offs(p2, 0, 0, puckHeight),vFast,z10,tGripper\WObj:=wobjTableN;
-	        MoveL Offs(p2, 0, 0, 10),vSlow,fine,tGripper\WObj:=wobjTableN;
-            closeGripper(FALSE);        
-	        MoveL Offs(p2, 0, 0, puckHeight),vFast,z10,tGripper\WObj:=wobjTableN;
+            !MoveJ Offs(p2, 0, 0, puckHeight),vSlow,z10,tGripper\WObj:=wobjTableN;
+	        !MoveL Offs(p2, 0, 0, 10),vSlow,fine,tGripper\WObj:=wobjTableN;
+            !closeGripper(FALSE);        
+	        !MoveL Offs(p2, 0, 0, puckHeight),vFast,z10,tGripper\WObj:=wobjTableN;
             count := count + 1;
             index := 0;
         ENDWHILE
@@ -292,9 +298,9 @@ MODULE E458GripperTest
 
     PROC takePicture()
         index := 0;
-        stop := 0;
+        stop_py := 0;
         WaitUntil (index <> 0);
-        WHILE (stop = 0) DO:
+        WHILE (stop_py = 0) DO
             p1.trans.x := dx1py;
             p1.trans.y := dy1py;
             p1.trans.z := dz1py;
@@ -302,6 +308,35 @@ MODULE E458GripperTest
             index := 0;
             WaitUntil (index <> 0);
         ENDWHILE
+    ENDPROC
+    
+    PROC mapWithMatrices()
+        TPWrite "executing moveCam() ..."; 
+        Wait := 0;
+        WHILE Wait < 3 DO
+            TPWrite "Asking python if is ok = "\Num:=Wait;
+            WaitUntil (index <> 0);
+            IF Wait > 3 THEN
+                TPWrite "Error";
+    	    ELSEIF Wait = 0 THEN
+                MoveJ Offs(table_center,0,0,500),vFast,z1,tCamera\WObj:=wobjTableN;
+    	    ELSEIF Wait = 1 THEN
+    	 	    MoveJ Offs(table_center,0,0,350),vFast,z1,tCamera\WObj:=wobjTableN;
+    	    ELSEIF Wait = 2 THEN
+    		    MoveJ Offs(table_center,0,0,200),vFast,z1,tCamera\WObj:=wobjTableN;
+    	    ENDIF
+            Wait := Wait+1;
+            index := 0;
+        ENDWHILE
+    ENDPROC
+    
+    PROC setOrigin()
+        TPWrite "Indicating the origin";
+        WaitUntil (index <> 0);
+        MoveJ Offs(table_center,0,0,10),vSlow,z1,tGripper\WObj:=wobjTableN;
+        index := 0;
+        WaitUntil (index <> 0);
+        MoveJ start,vSlow,z1,tGripper\WObj:=wobjTableN;
     ENDPROC
 
 ENDMODULE
