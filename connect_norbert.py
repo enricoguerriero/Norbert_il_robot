@@ -33,6 +33,7 @@ while True:
             
         if(inputvalue == 1):
             print("\n--- Mapping pucks ---\n")
+            robot.set_rapid_variable("index",0)
             robot.set_rapid_variable("WPW",inputvalue)
             print("Move camera and take pictures")
             map_dic = {}
