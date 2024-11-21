@@ -7,6 +7,7 @@ from map_puck import give_puck_coordinates
 import cv2
 import numpy as np
 from utils import ask_for_a_puck, ask_for_a_place, is_the_spot_free
+from transformation_matrices import transformation_with_transformation_matrix
 
 # help(RWS)
 # connection with norbert
@@ -21,11 +22,13 @@ robot = RWS.RWS(norbert_ip)
 
 # actually starting
 robot.request_rmmp()
+close_gripper = False
+trans_matrix_500 = [[-0.355, -0.0057, 123], [0.0096, -0.356, 232], [0, 0, 1]]
+trans_matrix_200 = [[-0.123, -0.0011, 43.6], [0.0030, -0.131, 84], [0, 0, 1]]
 while True:
     time.sleep(3)
     wrd_value = int(robot.get_rapid_variable("WRD"))
     print(wrd_value)
-    close_gripper = False
     
     if wrd_value == 0:
         print("Robot is waiting for Python to set 'WPW'")
@@ -305,7 +308,54 @@ while True:
                 else:
                     print("Invalid input")
                     break
-     
+                
+        elif (inputvalue == 10):
+            print("\n--- Alternative mapping ---\n")
+            robot.set_rapid_variable("index",0)
+            robot.set_rapid_variable("WPW",inputvalue)
+            print("Move camera and take pictures")
+            map_dic = {}    
+            angle_dic = {}
+            cam_position = [(0, 0, 500), (0, 0, 350), (0, -0, 200)]
+            for i in range(3):
+                robot.set_rapid_variable("index", 1)
+                while int(robot.get_rapid_variable("index")) == 1:
+                    print("Waiting for robot to move ... zzz ...")
+                    time.sleep(1)
+                print("Taking picture ...")
+                start = time.time()
+                capture_and_save_image(camera_index=1, save_path=f'images/usb_camera_image_{i+5}.jpg')
+                end = time.time()
+                image_path = f'images/usb_camera_image_{i+5}.jpg'
+                image = cv2.imread(image_path)
+                pucks = detect_qr_code_centers_and_angles(image)
+                numbers = [puck['number'] for puck in pucks]
+                print(f'Detected QR code numbers: {numbers}')
+
+                for puck in pucks:
+                    if i == 0:
+                        mat = trans_matrix_500
+                    elif i == 1:
+                        continue
+                    elif i == 2:
+                        mat = trans_matrix_200
+                    puck_coord = transformation_with_transformation_matrix(mat, puck['center'])
+                    if puck["number"] not in map_dic:
+                        map_dic[puck["number"]] = (puck_coord[0], puck_coord[1], 0)
+                        angle_dic[puck["number"]] = puck["angle"]
+                    else:
+                        print("Puck already in the dictionary")
+                        diff = (map_dic[puck['number']][0] - puck_coord[0],map_dic[puck['number']][1] - puck_coord[1])
+                        print(f"Difference between the two coordinates: {diff}")
+                        print("Computing the mean")
+                        x = (map_dic[puck["number"]][0] + puck_coord[0]) / 2
+                        y = (map_dic[puck["number"]][1] + puck_coord[1]) / 2
+                        angle = (angle_dic[puck["number"]] + puck["angle"]) / 2
+                        map_dic[puck["number"]] = (x, y, 0)
+                        angle_dic[puck["number"]] = angle
+            print("Puck mapping completed")
+            
+            
         else:
             print("Invalid input")
             break
