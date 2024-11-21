@@ -160,7 +160,7 @@ def detect_qr_codes(original_frame):
     
 def main():
     # Path to your image containing QR codes
-    image_path = 'Applied-Robot-Technologies/Norbert_il_robot/images/usb_camera_image_4.jpg' 
+    image_path = 'Norbert_il_robot/images/usb_camera_image_0.jpg' 
     # Load the image using OpenCV
     image = cv2.imread(image_path)
 
