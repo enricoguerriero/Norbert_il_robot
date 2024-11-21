@@ -51,7 +51,8 @@ MODULE E458GripperTest
     VAR num numqr :=0;
     VAR num index := 0;
     VAR num count := 0;
-    VAR gripper_py := 0;
+    VAR num gripper_py := 0;
+    VAR num stop := 0;
     
    PROC main() 
        TPWrite "MainLoop starts"; 
@@ -76,6 +77,8 @@ MODULE E458GripperTest
             CASE 5: invPosAction;
             CASE 6: doStack;
             CASE 7: changeGripperState;
+            CASE 8: movePuck;
+            CASE 9: takePicture;
             DEFAULT: TPWrite "Error";
             ENDTEST
         ENDWHILE 
@@ -280,11 +283,25 @@ MODULE E458GripperTest
     ENDPROC 
 
     PROC changeGripperState()
-        IF gripper_py = 1 DO
-            closeGripper(FALSE)
-        ELSEIF gripper_py = 2 DO
-            closeGripper(TRUE)
+        IF gripper_py = 1 THEN
+            closeGripper(FALSE);
+        ELSEIF gripper_py = 2 THEN
+            closeGripper(TRUE);
         ENDIF
+    ENDPROC
+
+    PROC takePicture()
+        index := 0;
+        stop := 0;
+        WaitUntil (index <> 0);
+        WHILE (stop = 0) DO:
+            p1.trans.x := dx1py;
+            p1.trans.y := dy1py;
+            p1.trans.z := dz1py;
+            MoveL p1,vFast,z10,tGripper\WObj:=wobjTableN;
+            index := 0;
+            WaitUntil (index <> 0);
+        ENDWHILE
     ENDPROC
 
 ENDMODULE

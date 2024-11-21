@@ -20,6 +20,8 @@ def detect_qr_code_centers_and_angles(image):
     
     color = [True, False]
     
+    qr_detector = cv2.QRCodeDetector()
+    
     # try both colored and grayscale images
     for col in color:
         if not col: 
@@ -61,12 +63,34 @@ def detect_qr_code_centers_and_angles(image):
                     })
                     # print(f"QR code {data} detected with color {col} and contrast {contrast}")
 
+            retval, decoded_info, points, _ = qr_detector.detectAndDecodeMulti(p_image)
+            if retval:
+                for i, info in enumerate(decoded_info):
+                    if info:
+                        pts = points[i].reshape(-1, 2)
+                        center = pts.mean(axis=0)
+                        center_x, center_y = int(center[0]), int(center[1])
+                        # Compute angle using the first two points
+                        vec = pts[1] - pts[0]
+                        angle = np.degrees(np.arctan2(vec[1], vec[0]))
+
+                        data = info[-1]
+
+                        if not any(data == qr['number'] for qr in results):
+                            results.append({
+                                'center': (center_x, center_y),
+                                'angle': angle,
+                                'size': None,
+                                'number': data
+                            })
+    
+
     return results
 
 
 def main():
     # Path to your image containing QR codes
-    image_path = 'images/usb_camera_image_0.jpg' 
+    image_path = 'images/usb_camera_image_4.jpg' 
 
     # Load the image using OpenCV
     image = cv2.imread(image_path)

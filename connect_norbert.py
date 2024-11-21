@@ -45,7 +45,7 @@ while True:
                     time.sleep(1)
                 print("Taking picture ...")
                 start = time.time()
-                capture_and_save_image(camera_index=0, save_path=f'images/usb_camera_image_{i}.jpg')
+                capture_and_save_image(camera_index=1, save_path=f'images/usb_camera_image_{i}.jpg')
                 end = time.time()
                 delta = end - start
                 print(f'Tempo di una foto: {delta}')
@@ -274,6 +274,36 @@ while True:
             time.sleep(5)
             robot.set_rapid_variable("WPW",0)
                        
+        elif (inputvalue == 9):
+            print("\n--- Take some pictures ---\n")
+            robot.set_rapid_variable("WPW",inputvalue)
+            while True:
+                robot.set_rapid_variable("index",0)
+                print("1. Take a picture")
+                print("2. Exit")
+                action = int(input("Action: "))
+                if action == 1:
+                    print("From where do you want to take the picture?")
+                    dx = input("dx: ")
+                    dy = input("dy: ")
+                    dz = input("dz: ")
+                    robot.set_rapid_variable("dx1py", dx)
+                    robot.set_rapid_variable("dy1py", dy)
+                    robot.set_rapid_variable("dz1py", dz)
+                    robot.set_rapid_variable("index",1)
+                    while int(robot.get_rapid_variable("index")) == 1:
+                        time.sleep(1)
+                        print("Waiting for robot to move ... zzz ...")
+                    print("Taking picture ...")
+                    capture_and_save_image(camera_index=1, save_path=f'images_tf/{dx}_{dy}_{dz}.jpg')
+                elif action == 2:
+                    robot.set_rapid_variable("index",1)
+                    robot.set_rapid_variable("stop",1)
+                    robot.set_rapid_variable("WPW",0)
+                    break
+                else:
+                    print("Invalid input")
+                    break
      
         else:
             print("Invalid input")
