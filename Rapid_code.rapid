@@ -30,6 +30,7 @@ MODULE E458GripperTest
     VAR robtarget p1:=[[0,0,0],[0,1,0,0],[0,0,0,0],[9E9,9E9,9E9,9E9,9E9,9E9]];
     VAR robtarget p2:=[[0,0,0],[0,1,0,0],[0,0,0,0],[9E9,9E9,9E9,9E9,9E9,9E9]];
     VAR robtarget p3:=[[0,0,0],[0,1,0,0],[0,0,0,0],[9E9,9E9,9E9,9E9,9E9,9E9]]; 
+    VAR robtarget rotated_p1:=[[0,0,0],[0,1,0,0],[0,0,0,0],[9E9,9E9,9E9,9E9,9E9,9E9]]; 
 
     VAR num dx:=0;
     VAR num dy:=0;
@@ -41,21 +42,6 @@ MODULE E458GripperTest
     VAR num dx2py:=0;
     VAR num dy2py:=0;
     VAR num dz2py:=0;
-    VAR num dx3py:=0;
-    VAR num dy3py:=0;
-    VAR num dz3py:=0;
-    VAR num dx4py:=0;
-    VAR num dy4py:=0;
-    VAR num dz4py:=0;
-    VAR num dx5py:=0;
-    VAR num dy5py:=0;
-    VAR num dz5py:=0;
-    VAR num dx6py:=0;
-    VAR num dy6py:=0;
-    VAR num dz6py:=0;
-    VAR num dx7py:=0;
-    VAR num dy7py:=0;
-    VAR num dz7py:=0;
 
     VAR num check:=0;
 
@@ -119,6 +105,7 @@ MODULE E458GripperTest
             p1.trans.x:= dx1py;
             p1.trans.y:= dy1py;
             p1.trans.z:= dz1py;
+            rotated_p1 := p1;
             
             MoveJ Offs(p1, 0, 0, safeHeight),vSlow,z10,tGripper\WObj:=wobjTableN;
             MoveJ Offs(p1, 30, 0, puckHeight),vVerySlow,z10,tGripper\WObj:=wobjTableN;
@@ -276,12 +263,19 @@ MODULE E458GripperTest
             p2.trans.y := dy2py;
             p2.trans.z := dz2py;
             
-            MoveJ Offs(p1, 0, 0, safeHeight),vFast,z10,tGripper\WObj:=wobjTableN;
+            MoveJ Offs(p1, 0, 0, puckHeight),vFast,z10,tGripper\WObj:=wobjTableN;
             MoveJ Offs(p1, 30, 0, puckHeight),vFast,z10,tGripper\WObj:=wobjTableN;
+            MoveJ Offs(p1, 30, 0, 10),vFast,z10,tGripper\WObj:=wobjTableN;
     	    MoveL Offs(p1, 0, 0, 10),vVerySlow,fine,tGripper\WObj:=wobjTableN;    
             closeGripper(TRUE);        
     	    MoveL Offs(p1, 0, 0, safeHeight),vFast,z10,tGripper\WObj:=wobjTableN;
-            
+
+            MoveJ Offs(p2, 0, 0, puckHeight),vFast,z10,tGripper\WObj:=wobjTableN;
+	        MoveL Offs(p2, 0, 0, 10),vSlow,fine,tGripper\WObj:=wobjTableN;
+            closeGripper(FALSE);        
+	        MoveL Offs(p2, 0, 0, puckHeight),vFast,z10,tGripper\WObj:=wobjTableN;
+            count := count + 1;
+            index := 0;
         ENDWHILE
     ENDPROC 
 ENDMODULE

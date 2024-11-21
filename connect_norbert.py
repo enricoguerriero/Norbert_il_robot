@@ -4,11 +4,11 @@ from connect_camera import capture_and_save_image
 from find_qr import detect_qr_code_centers_and_angles
 import time
 from map_puck import give_puck_coordinates
-from find_qrgood import detect_qr_codes
 import cv2
+import numpy as np
 
 # help(RWS)
-# Step 1: Set up the connection to Norbert
+# connection with norbert
 norbert_ip = "http://152.94.160.198"  
 try:
     requests.get(norbert_ip)
@@ -18,7 +18,7 @@ except requests.exceptions.ConnectionError:
     exit(1)
 robot = RWS.RWS(norbert_ip)
 
-# Step 2: Read the WRD (or any other robtarget variable) and display its initial state
+# actually starting
 robot.request_rmmp()
 while True:
     time.sleep(3)
@@ -30,6 +30,7 @@ while True:
         inputvalue = int(input("action: "))
             
         if(inputvalue == 1):
+            print("\n--- Mapping pucks ---\n")
             robot.set_rapid_variable("WPW",inputvalue)
             print("Move camera and take pictures")
             map_dic = {}
@@ -58,7 +59,7 @@ while True:
             for i in range(5):
                 image_path = f'images/usb_camera_image_{i}.jpg'
                 image = cv2.imread(image_path)
-                pucks = detect_qr_codes(image)
+                pucks = detect_qr_code_centers_and_angles(image)
                 numbers = [puck['number'] for puck in pucks]
                 print(f'Detected QR code numbers: {numbers}')
 
@@ -76,14 +77,14 @@ while True:
                         y = (map_dic[puck["number"]][1] + puck_coord[1]) / 2
                         angle = (angle_dic[puck["number"]] + puck["angle"]) / 2
                         map_dic[puck["number"]] = (x, y, 0)
-                        angle_dic[puck["number"]] = angle
+                        angle_dic[puck["number"]] = angle * (np.pi / 180)
             print("Puck mapping completed")
             print("Puck mapped: ", map_dic)
             print("Puck angle: ", angle_dic)
             robot.set_rapid_variable("WPW",0)
             
         elif (inputvalue == 2):
-            # Rotate pucks
+            print("\n--- Rotate pucks ---\n")
             robot.set_rapid_variable("numqr", len(map_dic))
             robot.set_rapid_variable("index", 0)
             robot.set_rapid_variable("WPW",inputvalue)
@@ -101,10 +102,11 @@ while True:
                     time.sleep(1)
             
         elif (inputvalue == 3):
-            print("Move to puck")
-            dx = input("dx: ")
-            dy = input("dy: ")
-            dz = input("dz: ")
+            print("\n --- Take a puck ---\n")
+            puck_to_take = input("Puck to take: ")
+            dx = map_dic[puck_to_take][0]
+            dy = map_dic[puck_to_take][1]
+            dz = map_dic[puck_to_take][2]
             robot.set_rapid_variable("dx1py", dx)
             robot.set_rapid_variable("dy1py", dy)
             robot.set_rapid_variable("dz1py", dz)
@@ -113,7 +115,8 @@ while True:
             robot.set_rapid_variable("WPW",0)
         
         elif (inputvalue == 4):
-            print("Move to puck")
+            print("\n --- Place a puck ---\n")
+            print("Where do you want to place the puck?")
             dx = input("dx: ")
             dy = input("dy: ")
             dz = input("dz: ")
@@ -133,6 +136,13 @@ while True:
             robot.set_rapid_variable("index", 0)
             robot.set_rapid_variable("WPW",inputvalue)
             n_puck = 0
+            if any(abs(map_dic[puck][0]) < 20 and abs(map_dic[puck][1])):
+                origin = (0,0,0)
+            else:
+                print("Origin is not free for building the stack, give me custom coordinates")
+                dx = input("dx: ")
+                dy = input("dy: ")
+                origin = (dx, dy, 0)
             for puck in map_dic.keys():
                 time.sleep(1)
                 print(f"Creating stack for puck {puck}")
@@ -140,18 +150,10 @@ while True:
                 robot.set_rapid_variable("dy1py", map_dic[puck][1])
                 robot.set_rapid_variable("dz1py", map_dic[puck][2])
                 robot.set_rapid_variable("anglepy", angle_dic[puck])
-                # check if (0,0) is free
-                if any(abs(map_dic[puck][0]) < 20 and abs(map_dic[puck][1]) < 20 for puck in map_dic.keys()):    
-                    robot.set_rapid_variable("dx2py", 0)
-                    robot.set_rapid_variable("dy2py", 0)
-                    robot.set_rapid_variable("dz2py", 0 + n_puck * 30)
-                else:
-                    print("Origin is not free for building the stack, give me custom coordinates")
-                    dx = input("dx: ")
-                    dy = input("dy: ")
-                    robot.set_rapid_variable("dx2py", dx)
-                    robot.set_rapid_variable("dy2py", dy)
-                    robot.set_rapid_variable("dz2py", 0 + n_puck * 30)                    
+                robot.set_rapid_variable("dx2py", origin[0])
+                robot.set_rapid_variable("dy2py", origin[1])
+                robot.set_rapid_variable("dz2py", origin[2])
+                origin = (origin[0], origin[1], origin[2] + 30)                    
                 n_puck += 1
                 
                 robot.set_rapid_variable("index", 1)
