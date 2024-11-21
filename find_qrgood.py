@@ -56,7 +56,7 @@ def enhance_image(image):
     enhanced_versions.append(contrast_stretched)
     
     # Perspective transform variations
-    enhanced_versions.append(apply_perspective_transform(gray))
+    # enhanced_versions.append(apply_perspective_transform(gray))
     
     # CLAHE (Contrast Limited Adaptive Histogram Equalization)
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
@@ -130,31 +130,6 @@ def detect_qr_codes(original_frame):
                             'number': qr_data[-1]
                         })
                         #print(results)
-    
-            # Draw results on original image
-            for box_points in all_polygons:
-                rect = cv2.minAreaRect(box_points)
-                box = cv2.boxPoints(rect)
-                box = np.intp(box)
-                
-                # Draw bounding box
-                cv2.polylines(frame, [box], True, (0, 0, 255), 2)
-                
-                # Draw center point
-                center_x, center_y = rect[0]
-                cv2.circle(frame, (int(center_x), int(center_y)), 5, (255, 0, 0), -1)
-            
-            #print(f"\nTotal unique QR codes detected: {len(detected_qrs)}")
-            
-    # Save and display results
-    output_path = f"detected_qr_codes.png"
-    cv2.imwrite(output_path, frame)
-    print(f"Image saved as '{output_path}'")
-            
-    # Display results
-    cv2.imshow("Detected QR Codes", frame)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
             
     return(results)
     

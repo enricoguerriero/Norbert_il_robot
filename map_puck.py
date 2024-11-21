@@ -38,7 +38,7 @@ def give_puck_coordinates(pixel_puck, camera_coord, image_width, image_height, s
     X = camera_coord[0] + (x_prime * camera_coord[2]) / f_x
     Y = camera_coord[1] + (y_prime * camera_coord[2]) / f_y
 
-    puck_coord = (X-5.95, Y+7.45)
+    puck_coord = (X-6.1, Y+7.45)
 
     # correct respect to camera position
 

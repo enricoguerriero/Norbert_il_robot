@@ -17,29 +17,30 @@ def ask_for_a_puck(map_dic):
             return None
         
         
-def ask_for_a_place(map_dic):
+def ask_for_a_place(map_dic, puck_to_move):
     '''
     Asks user for a place to put the puck.
     '''
     print("Where do you want to place the puck?")
-    dx = input("dx: ")
-    dy = input("dy: ")
+    dx = float(input("dx: "))
+    dy = float(input("dy: "))
     
-    if any([dx - map_dic[puck][0] < 1 and dy - map_dic[puck][1] < 1 for puck in map_dic]):
+    filtered_dic = {key: value for key, value in map_dic.items() if key != puck_to_move}
+    if any([dx - map_dic[puck][0] < 1 and dy - map_dic[puck][1] < 1 for puck in filtered_dic]):
         print("You are placing the puck over another puck.")
         # find which is the puck down the one we are placing
-        pucks_down = [puck for puck in map_dic if dx - map_dic[puck][0] < 1 and dy - map_dic[puck][1] < 1]
+        pucks_down = [puck for puck in filtered_dic if dx - filtered_dic[puck][0] < 1 and dy - filtered_dic[puck][1] < 1]
         n_pucks_down = len(pucks_down)
         return (dx, dy, 0 + 30 * n_pucks_down)
     
-    if any([dx - map_dic[puck][0] < 20 and dy - map_dic[puck][1] < 20 for puck in map_dic]):
-        while any([dx - map_dic[puck][0] < 20 and dy - map_dic[puck][1] < 20 for puck in map_dic]):
+    if any([dx - filtered_dic[puck][0] < 20 and dy - filtered_dic[puck][1] < 20 for puck in filtered_dic]):
+        while any([dx - filtered_dic[puck][0] < 20 and dy - filtered_dic[puck][1] < 20 for puck in filtered_dic]):
             print("You are placing the puck too close to another puck.")
             dx = input("dx: ")
             dy = input("dy: ")
-            if any([dx - map_dic[puck][0] < 1 and dy - map_dic[puck][1] < 1 for puck in map_dic]):
+            if any([dx - filtered_dic[puck][0] < 1 and dy - filtered_dic[puck][1] < 1 for puck in filtered_dic]):
                 print("You are placing the puck over another puck.")
-                pucks_down = [puck for puck in map_dic if dx - map_dic[puck][0] < 1 and dy - map_dic[puck][1] < 1]
+                pucks_down = [puck for puck in filtered_dic if dx - filtered_dic[puck][0] < 1 and dy - filtered_dic[puck][1] < 1]
                 n_pucks_down = len(pucks_down)
                 
                 return (dx, dy, 0 + 30 * n_pucks_down)

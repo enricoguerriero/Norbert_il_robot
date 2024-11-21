@@ -72,7 +72,7 @@ def detect_qr_code_centers_and_angles(image):
                         center_x, center_y = int(center[0]), int(center[1])
                         # Compute angle using the first two points
                         vec = pts[1] - pts[0]
-                        angle = np.degrees(np.arctan2(vec[1], vec[0]))
+                        angle = float(np.degrees(np.arctan2(vec[1], vec[0])))
 
                         data = info[-1]
 
@@ -90,7 +90,7 @@ def detect_qr_code_centers_and_angles(image):
 
 def main():
     # Path to your image containing QR codes
-    image_path = 'Norbert_il_robot/images/usb_camera_image_4.jpg' 
+    image_path = 'Norbert_il_robot/images/usb_camera_image_0.jpg' 
 
     # Load the image using OpenCV
     image = cv2.imread(image_path)

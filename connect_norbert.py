@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 from utils import ask_for_a_puck, ask_for_a_place, is_the_spot_free
 from transformation_matrices import transformation_with_transformation_matrix
+from find_qrgood import detect_qr_codes
 
 # help(RWS)
 # connection with norbert
@@ -25,6 +26,8 @@ robot.request_rmmp()
 close_gripper = False
 trans_matrix_500 = [[-0.355, -0.0057, 123], [0.0096, -0.356, 232], [0, 0, 1]]
 trans_matrix_200 = [[-0.123, -0.0011, 43.6], [0.0030, -0.131, 84], [0, 0, 1]]
+map_dic = {}
+angle_dic = {}
 while True:
     time.sleep(3)
     wrd_value = int(robot.get_rapid_variable("WRD"))
@@ -39,8 +42,6 @@ while True:
             robot.set_rapid_variable("index",0)
             robot.set_rapid_variable("WPW",inputvalue)
             print("Move camera and take pictures")
-            map_dic = {}
-            angle_dic = {}
             # try to manage camera - robot communication with index variable
             for i in range(5):
                 robot.set_rapid_variable("index", 1)
@@ -49,7 +50,7 @@ while True:
                     time.sleep(1)
                 print("Taking picture ...")
                 start = time.time()
-                capture_and_save_image(camera_index=1, save_path=f'images/usb_camera_image_{i}.jpg')
+                capture_and_save_image(camera_index=1, save_path=f'Norbert_il_robot/images/usb_camera_image_{i}.jpg')
                 end = time.time()
                 delta = end - start
                 print(f'Tempo di una foto: {delta}')
@@ -58,9 +59,9 @@ while True:
             print("Mapping puck ... ")
             cam_position = [(0, 0, 470), (-100, -100, 470), (-100, 100, 470), (100, 100, 470), (100, -100, 470)]
             for i in range(5):
-                image_path = f'images/usb_camera_image_{i}.jpg'
+                image_path = f'Norbert_il_robot/images/usb_camera_image_{i}.jpg'
                 image = cv2.imread(image_path)
-                pucks = detect_qr_code_centers_and_angles(image)
+                pucks = detect_qr_codes(image)
                 numbers = [puck['number'] for puck in pucks]
                 print(f'Detected QR code numbers: {numbers}')
 
@@ -139,6 +140,7 @@ while True:
             robot.set_rapid_variable("dy1py", dy)
             robot.set_rapid_variable("dz1py", dz)
             robot.set_rapid_variable("WPW",inputvalue)
+            map_dic[puck_to_take] = (dx,dy,dz)
             time.sleep(5)
             close_gripper = False
             robot.set_rapid_variable("WPW",0)
@@ -152,10 +154,12 @@ while True:
                 continue
             puck_1 = ask_for_a_puck(map_dic)
             if puck_1 is None:
+                print("Puck 1 not mapped")
                 robot.set_rapid_variable("WPW",0)
                 continue
             puck_2 = ask_for_a_puck(map_dic)
             if puck_2 is None:
+                print("Puck 2 not mapped")
                 robot.set_rapid_variable("WPW",0)
                 continue
             if is_the_spot_free(map_dic, 0, 0):
@@ -183,8 +187,6 @@ while True:
                 print("Choose your spot (no check)")
                 dx_spot = input("Free spot x: ")
                 dy_spot = input("Free spot y: ")
-                robot.set_rapid_variable("WPW",0)
-                continue
             robot.set_rapid_variable("dx1py", map_dic[puck_1][0])
             robot.set_rapid_variable("dy1py", map_dic[puck_1][1])
             robot.set_rapid_variable("dz1py", map_dic[puck_1][2])
@@ -195,6 +197,9 @@ while True:
             robot.set_rapid_variable("dy3py", dy_spot)
             robot.set_rapid_variable("dz3py", 0)
             robot.set_rapid_variable("WPW",inputvalue)
+            pos_temp = map_dic[puck_1]
+            map_dic[puck_1] = map_dic[puck_2]
+            map_dic[puck_2] = pos_temp
             time.sleep(5)
             robot.set_rapid_variable("WPW",0)
         
@@ -230,7 +235,7 @@ while True:
                 n_puck += 1
                 
                 robot.set_rapid_variable("index", 1)
-                angle_dic[puck] = 0
+                map_dic[puck] = origin
                 time.sleep(5)
                 while int(robot.get_rapid_variable("index")) == 1:
                     time.sleep(1)
@@ -267,10 +272,10 @@ while True:
             if puck_to_move is None:
                 robot.set_rapid_variable("WPW",0)
                 continue
-            place = ask_for_a_place(map_dic)
-            dx = place[0]
-            dy = place[1]
-            dz = place[2]
+            place = ask_for_a_place(map_dic, puck_to_move)
+            dx = float(place[0])
+            dy = float(place[1])
+            dz = float(place[2])
             robot.set_rapid_variable("dx1py", map_dic[puck_to_move][0])
             robot.set_rapid_variable("dy1py", map_dic[puck_to_move][1])
             robot.set_rapid_variable("dz1py", map_dic[puck_to_move][2])
@@ -278,6 +283,7 @@ while True:
             robot.set_rapid_variable("dy2py", dy)
             robot.set_rapid_variable("dz2py", dz)
             robot.set_rapid_variable("WPW",inputvalue)
+            map_dic[puck_to_move] = place
             time.sleep(5)
             robot.set_rapid_variable("WPW",0)
                        
@@ -375,6 +381,11 @@ while True:
                     if ready == "y":
                         robot.set_rapid_variable("index",1)
             robot.set_rapid_variable("WPW",0)
+            
+        elif (inputvalue == 12):
+            print("\n --- Clean mapping --- \n")
+            map_dic = {}
+            angle_dic = {}
                         
         else:
             print("Invalid input")
