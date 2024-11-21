@@ -180,6 +180,9 @@ while True:
                 dy_spot = 0
             else:
                 print("No free spot found")
+                print("Choose your spot (no check)")
+                dx_spot = input("Free spot x: ")
+                dy_spot = input("Free spot y: ")
                 robot.set_rapid_variable("WPW",0)
                 continue
             robot.set_rapid_variable("dx1py", map_dic[puck_1][0])
@@ -206,7 +209,7 @@ while True:
             robot.set_rapid_variable("index", 0)
             robot.set_rapid_variable("WPW",inputvalue)
             n_puck = 0
-            if any(abs(map_dic[puck][0]) < 20 and abs(map_dic[puck][1])):
+            if any(abs(map_dic[puck][0]) < 20 and abs(map_dic[puck][1]) for puck in map_dic):
                 origin = (0,0,0)
             else:
                 print("Origin is not free for building the stack, give me custom coordinates")
@@ -299,7 +302,7 @@ while True:
                         time.sleep(1)
                         print("Waiting for robot to move ... zzz ...")
                     print("Taking picture ...")
-                    capture_and_save_image(camera_index=1, save_path=f'images_tf/{dx}_{dy}_{dz}.jpg')
+                    capture_and_save_image(camera_index=1, save_path=f'Norbert_il_robot/images_tf/{dx}_{dy}_{dz}.jpg')
                 elif action == 2:
                     robot.set_rapid_variable("index",1)
                     robot.set_rapid_variable("stop_py",1)
@@ -365,12 +368,12 @@ while True:
             print("Position the puck in the origin")
             ready = input("Ready? (y/n): ")
             if ready == "y":
-                robot.set_rapid_variable("index",0)
+                robot.set_rapid_variable("index",1)
             else:
                 while ready != "y":
                     ready = input("Ready? (y/n): ")
                     if ready == "y":
-                        robot.set_rapid_variable("index",0)
+                        robot.set_rapid_variable("index",1)
             robot.set_rapid_variable("WPW",0)
                         
         else:
