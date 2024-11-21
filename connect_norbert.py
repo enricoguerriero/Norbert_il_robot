@@ -74,7 +74,7 @@ while True:
                         y = (map_dic[puck["number"]][1] + puck_coord[1]) / 2
                         angle = (angle_dic[puck["number"]] + puck["angle"]) / 2
                         map_dic[puck["number"]] = (x, y, 0)
-                        angle_dic[puck["number"]] = angle * (np.pi / 180)
+                        angle_dic[puck["number"]] = angle # * (np.pi / 180)
             print("Puck mapping completed")
             print("Puck mapped: ", map_dic)
             print("Puck angle: ", angle_dic)
@@ -298,7 +298,7 @@ while True:
                     capture_and_save_image(camera_index=1, save_path=f'images_tf/{dx}_{dy}_{dz}.jpg')
                 elif action == 2:
                     robot.set_rapid_variable("index",1)
-                    robot.set_rapid_variable("stop",1)
+                    robot.set_rapid_variable("stop_py",1)
                     robot.set_rapid_variable("WPW",0)
                     break
                 else:
