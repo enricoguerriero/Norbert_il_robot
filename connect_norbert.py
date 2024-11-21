@@ -24,6 +24,7 @@ while True:
     time.sleep(3)
     wrd_value = int(robot.get_rapid_variable("WRD"))
     print(wrd_value)
+    close_gripper = False
     
     if wrd_value == 0:
         print("Robot is waiting for Python to set 'WPW'")
@@ -35,17 +36,12 @@ while True:
             print("Move camera and take pictures")
             map_dic = {}
             angle_dic = {}
+            # try to manage camera - robot communication with index variable
             for i in range(5):
-                # print(i)
-                # robot.set_rapid_variable("Wait", i)
-                print("Sleeping...")
-                time.sleep(4.5)
-                # check = int(robot.get_rapid_variable("check"))
-                # print(check)
-                # while check == 0:
-                #     check = int(robot.get_rapid_variable("check"))
-                #     print("sleep... zzz... zzz...")
-                #     time.sleep(3)
+                robot.set_rapid_variable("index", 1)
+                while int(robot.get_rapid_variable("index")) == 1:
+                    print("Waiting for robot to move ... zzz ...")
+                    time.sleep(1)
                 print("Taking picture ...")
                 start = time.time()
                 capture_and_save_image(camera_index=0, save_path=f'images/usb_camera_image_{i}.jpg')
@@ -85,6 +81,10 @@ while True:
             
         elif (inputvalue == 2):
             print("\n--- Rotate pucks ---\n")
+            if close_gripper:
+                print("Gripper is closed, you can't pick up the pucks")
+                robot.set_rapid_variable("WPW",0)
+                continue
             robot.set_rapid_variable("numqr", len(map_dic))
             robot.set_rapid_variable("index", 0)
             robot.set_rapid_variable("WPW",inputvalue)
@@ -103,6 +103,10 @@ while True:
             
         elif (inputvalue == 3):
             print("\n --- Take a puck ---\n")
+            if close_gripper:
+                print("Gripper is closed, you can't take a puck")
+                robot.set_rapid_variable("WPW",0)
+                continue
             puck_to_take = input("Puck to take: ")
             dx = map_dic[puck_to_take][0]
             dy = map_dic[puck_to_take][1]
@@ -112,10 +116,15 @@ while True:
             robot.set_rapid_variable("dz1py", dz)
             robot.set_rapid_variable("WPW",inputvalue)
             time.sleep(5)
+            close_gripper = True
             robot.set_rapid_variable("WPW",0)
         
         elif (inputvalue == 4):
             print("\n --- Place a puck ---\n")
+            if not close_gripper:
+                print("Gripper is not closed, you can't place a puck")
+                robot.set_rapid_variable("WPW",0)
+                continue
             print("Where do you want to place the puck?")
             dx = input("dx: ")
             dy = input("dy: ")
@@ -125,6 +134,7 @@ while True:
             robot.set_rapid_variable("dz1py", dz)
             robot.set_rapid_variable("WPW",inputvalue)
             time.sleep(5)
+            close_gripper = False
             robot.set_rapid_variable("WPW",0)
             
         elif (inputvalue == 5):
@@ -132,6 +142,10 @@ while True:
         
         elif (inputvalue == 6):
             print("\n--- Create a stack ---\n")
+            if close_gripper:
+                print("Gripper is closed, you can't create a stack")
+                robot.set_rapid_variable("WPW",0)
+                continue
             robot.set_rapid_variable("numqr", len(map_dic))
             robot.set_rapid_variable("index", 0)
             robot.set_rapid_variable("WPW",inputvalue)
@@ -161,7 +175,27 @@ while True:
                 time.sleep(5)
                 while int(robot.get_rapid_variable("index")) == 1:
                     time.sleep(1)
-            
+        
+        elif (inputvalue == 7):
+            print("\n--- Open / Close gripper ---\n")
+            print("1. Open gripper")
+            print("2. Close gripper")
+            gripper_action = 0
+            while gripper_action != 1 and gripper_action != 2:
+                gripper_action = int(input("Action: "))
+                if gripper_action == 1:
+                    robot.set_rapid_variable("gripper_py", 1)
+                    close_gripper = False
+                elif gripper_action == 2:
+                    robot.set_rapid_variable("gripper_py", 2)
+                    close_gripper = True
+                else:
+                    print("Invalid input, please try again")
+                    print("Choose a number between 1 and 2")
+            robot.set_rapid_variable("WPW",inputvalue)
+            time.sleep(5)
+            robot.set_rapid_variable("WPW",0)
+                       
      
         else:
             print("Invalid input")

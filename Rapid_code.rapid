@@ -51,6 +51,7 @@ MODULE E458GripperTest
     VAR num numqr :=0;
     VAR num index := 0;
     VAR num count := 0;
+    VAR gripper_py := 0;
     
    PROC main() 
        TPWrite "MainLoop starts"; 
@@ -74,6 +75,7 @@ MODULE E458GripperTest
             CASE 4: putPuckAction;
             CASE 5: invPosAction;
             CASE 6: doStack;
+            CASE 7: changeGripperState;
             DEFAULT: TPWrite "Error";
             ENDTEST
         ENDWHILE 
@@ -99,7 +101,8 @@ MODULE E458GripperTest
         WaitTime 1.2;
     ENDPROC
     
-    PROC rotatePucks()      
+    PROC rotatePucks()  
+    index := 0;    
         WHILE count < numqr DO
             WaitUntil (index <> 0);
             p1.trans.x:= dx1py;
@@ -126,12 +129,10 @@ MODULE E458GripperTest
     PROC mapPucks() 
         TPWrite "executing moveCam() ..."; 
         Wait := 1;
-        !check := 0;
+        index := 0;
         WHILE Wait < 6 DO
-        !FOR i FROM 1 TO Dim(5, 1) STEP 1 DO
             TPWrite "Asking python if is ok = "\Num:=Wait;
-            !check := 0;
-            !WaitUntil (check <> 0);
+            WaitUntil (index <> 0);
             IF Wait > 6 THEN
                 TPWrite "Error";
     	    ELSEIF Wait = 1 THEN
@@ -145,9 +146,8 @@ MODULE E458GripperTest
      	    ELSEIF Wait = 5 THEN
     		    MoveJ Offs(table_center,100,-100,cameraDefaultHeight),vFast,z1,tCamera\WObj:=wobjTableN;
     	    ENDIF
-            WaitTime 13;
             Wait := Wait+1;
-            !check := 1;
+            index := 0;
         ENDWHILE
     ENDPROC
     
@@ -278,4 +278,13 @@ MODULE E458GripperTest
             index := 0;
         ENDWHILE
     ENDPROC 
+
+    PROC changeGripperState()
+        IF gripper_py = 1 DO
+            closeGripper(FALSE)
+        ELSEIF gripper_py = 2 DO
+            closeGripper(TRUE)
+        ENDIF
+    ENDPROC
+
 ENDMODULE
