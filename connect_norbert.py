@@ -355,7 +355,24 @@ while True:
                         angle_dic[puck["number"]] = angle
             print("Puck mapping completed")
             
-            
+        elif (inputvalue == 11):
+            print("\n --- Set a puck in the origin ---\n")
+            robot.set_rapid_variable("index",1)
+            robot.set_rapid_variable("WPW",inputvalue)
+            while int(robot.get_rapid_variable("index")) == 1:
+                time.sleep(1)
+                print("Waiting for robot to move ... zzz ...")
+            print("Position the puck in the origin")
+            ready = input("Ready? (y/n): ")
+            if ready == "y":
+                robot.set_rapid_variable("index",0)
+            else:
+                while ready != "y":
+                    ready = input("Ready? (y/n): ")
+                    if ready == "y":
+                        robot.set_rapid_variable("index",0)
+            robot.set_rapid_variable("WPW",0)
+                        
         else:
             print("Invalid input")
             break
