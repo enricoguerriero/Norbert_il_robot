@@ -345,7 +345,7 @@ while True:
                         angle_dic[puck["number"]] = puck["angle"]
                     else:
                         print("Puck already in the dictionary")
-                        diff = (map_dic[puck['number']][0] - puck_coord[0],map_dic[puck['number']][1] - puck_coord[1])
+                        diff = (abs(map_dic[puck['number']][0] - puck_coord[0]),abs(map_dic[puck['number']][1] - puck_coord[1]))
                         print(f"Difference between the two coordinates: {diff}")
                         print("Computing the mean")
                         x = (map_dic[puck["number"]][0] + puck_coord[0]) / 2
