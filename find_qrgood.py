@@ -138,23 +138,23 @@ def detect_qr_codes(original_frame):
                 box = np.intp(box)
                 
                 # Draw bounding box
-                cv2.polylines(frame, [box], True, (0, 0, 255), 2)
+                # cv2.polylines(frame, [box], True, (0, 0, 255), 2)
                 
                 # Draw center point
                 center_x, center_y = rect[0]
-                cv2.circle(frame, (int(center_x), int(center_y)), 5, (255, 0, 0), -1)
+                # cv2.circle(frame, (int(center_x), int(center_y)), 5, (255, 0, 0), -1)
             
             #print(f"\nTotal unique QR codes detected: {len(detected_qrs)}")
             
     # Save and display results
     output_path = f"detected_qr_codes.png"
-    cv2.imwrite(output_path, frame)
+    # cv2.imwrite(output_path, frame)
     print(f"Image saved as '{output_path}'")
             
-    # Display results
-    cv2.imshow("Detected QR Codes", frame)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # # Display results
+    # cv2.imshow("Detected QR Codes", frame)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
             
     return(results)
     
