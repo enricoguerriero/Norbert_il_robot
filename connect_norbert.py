@@ -6,6 +6,7 @@ import time
 from map_puck import give_puck_coordinates
 import cv2
 import numpy as np
+from utils import ask_for_a_puck, ask_for_a_place, is_the_spot_free
 
 # help(RWS)
 # connection with norbert
@@ -100,6 +101,7 @@ while True:
                 time.sleep(5)
                 while int(robot.get_rapid_variable("index")) == 1:
                     time.sleep(1)
+            robot.set_rapid_variable("WPW",0)
             
         elif (inputvalue == 3):
             print("\n --- Take a puck ---\n")
@@ -137,8 +139,58 @@ while True:
             close_gripper = False
             robot.set_rapid_variable("WPW",0)
             
+            
         elif (inputvalue == 5):
-            print("Input value 5")
+            print("\n --- Invert pucks ---\n")
+            if close_gripper:
+                print("Gripper is closed, you can't invert the pucks")
+                robot.set_rapid_variable("WPW",0)
+                continue
+            puck_1 = ask_for_a_puck(map_dic)
+            if puck_1 is None:
+                robot.set_rapid_variable("WPW",0)
+                continue
+            puck_2 = ask_for_a_puck(map_dic)
+            if puck_2 is None:
+                robot.set_rapid_variable("WPW",0)
+                continue
+            if is_the_spot_free(map_dic, 0, 0):
+                print("Origin is free")
+                dx_spot = 0
+                dy_spot = 0
+            elif is_the_spot_free(map_dic, 0, 100):
+                print("Origin is not free, moving to the right")
+                dx_spot = 0
+                dy_spot = 100
+            elif is_the_spot_free(map_dic, 0, -100):
+                print("Origin is not free, moving to the left")
+                dx_spot = 0
+                dy_spot = -100
+            elif is_the_spot_free(map_dic, 100, 0):
+                print("Origin is not free, moving up")
+                dx_spot = 100
+                dy_spot = 0
+            elif is_the_spot_free(map_dic, -100, 0):
+                print("Origin is not free, moving down")
+                dx_spot = -100
+                dy_spot = 0
+            else:
+                print("No free spot found")
+                robot.set_rapid_variable("WPW",0)
+                continue
+            robot.set_rapid_variable("dx1py", map_dic[puck_1][0])
+            robot.set_rapid_variable("dy1py", map_dic[puck_1][1])
+            robot.set_rapid_variable("dz1py", map_dic[puck_1][2])
+            robot.set_rapid_variable("dx2py", map_dic[puck_2][0])
+            robot.set_rapid_variable("dy2py", map_dic[puck_2][1])
+            robot.set_rapid_variable("dz2py", map_dic[puck_2][2])
+            robot.set_rapid_variable("dx3py", dx_spot)
+            robot.set_rapid_variable("dy3py", dy_spot)
+            robot.set_rapid_variable("dz3py", 0)
+            robot.set_rapid_variable("WPW",inputvalue)
+            time.sleep(5)
+            robot.set_rapid_variable("WPW",0)
+        
         
         elif (inputvalue == 6):
             print("\n--- Create a stack ---\n")
@@ -175,6 +227,8 @@ while True:
                 time.sleep(5)
                 while int(robot.get_rapid_variable("index")) == 1:
                     time.sleep(1)
+            time.sleep(5)
+            robot.set_rapid_variable("WPW",0)
         
         elif (inputvalue == 7):
             print("\n--- Open / Close gripper ---\n")
@@ -192,6 +246,30 @@ while True:
                 else:
                     print("Invalid input, please try again")
                     print("Choose a number between 1 and 2")
+            robot.set_rapid_variable("WPW",inputvalue)
+            time.sleep(5)
+            robot.set_rapid_variable("WPW",0)
+            
+        elif (inputvalue == 8):
+            print("\n--- Move puck ---\n")
+            if close_gripper:
+                print("Gripper is closed, you can't move a puck")
+                robot.set_rapid_variable("WPW",0)
+                continue
+            puck_to_move = ask_for_a_puck(map_dic)
+            if puck_to_move is None:
+                robot.set_rapid_variable("WPW",0)
+                continue
+            place = ask_for_a_place(map_dic)
+            dx = place[0]
+            dy = place[1]
+            dz = place[2]
+            robot.set_rapid_variable("dx1py", map_dic[puck_to_move][0])
+            robot.set_rapid_variable("dy1py", map_dic[puck_to_move][1])
+            robot.set_rapid_variable("dz1py", map_dic[puck_to_move][2])
+            robot.set_rapid_variable("dx2py", dx)
+            robot.set_rapid_variable("dy2py", dy)
+            robot.set_rapid_variable("dz2py", dz)
             robot.set_rapid_variable("WPW",inputvalue)
             time.sleep(5)
             robot.set_rapid_variable("WPW",0)

@@ -46,3 +46,10 @@ def ask_for_a_place(map_dic):
         return (dx, dy, 0)
     
     return (dx, dy, 0)
+
+
+def is_the_spot_free(map_dic, dx, dy):
+    '''
+    Checks if the spot is free.
+    '''
+    return not any([dx - map_dic[puck][0] < 1 and dy - map_dic[puck][1] < 1 for puck in map_dic])
