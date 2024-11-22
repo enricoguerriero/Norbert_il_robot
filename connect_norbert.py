@@ -30,6 +30,19 @@ map_dic = {}
 angle_dic = {}
 while True:
     time.sleep(3)
+    print("\n--- Choose an action ---\n")
+    print("1. Map pucks")
+    print("2. Rotate pucks")
+    print("3. Take a puck")
+    print("4. Place a puck")
+    print("5. Invert pucks")
+    print("6. Create a stack")
+    print("7. Open / Close gripper")
+    print("8. Move puck")
+    print("9. Take some pictures")
+    print("10. Alternative mapping")
+    print("11. Set a puck in the origin")
+    print("12. Unstack pucks")
     wrd_value = int(robot.get_rapid_variable("WRD"))
     print(wrd_value)
     
@@ -162,28 +175,12 @@ while True:
                 print("Puck 2 not mapped")
                 robot.set_rapid_variable("WPW",0)
                 continue
-            if is_the_spot_free(map_dic, 0, 0):
+            if not any([abs(map_dic[puck][0]) < 20 and abs(map_dic[puck][1]) < 20 for puck in map_dic]):
                 print("Origin is free")
                 dx_spot = 0
                 dy_spot = 0
-            elif is_the_spot_free(map_dic, 0, 100):
-                print("Origin is not free, moving to the right")
-                dx_spot = 0
-                dy_spot = 100
-            elif is_the_spot_free(map_dic, 0, -100):
-                print("Origin is not free, moving to the left")
-                dx_spot = 0
-                dy_spot = -100
-            elif is_the_spot_free(map_dic, 100, 0):
-                print("Origin is not free, moving up")
-                dx_spot = 100
-                dy_spot = 0
-            elif is_the_spot_free(map_dic, -100, 0):
-                print("Origin is not free, moving down")
-                dx_spot = -100
-                dy_spot = 0
             else:
-                print("No free spot found")
+                print("Origin is not free")
                 print("Choose your spot (no check)")
                 dx_spot = input("Free spot x: ")
                 dy_spot = input("Free spot y: ")
@@ -214,6 +211,7 @@ while True:
             robot.set_rapid_variable("index", 0)
             robot.set_rapid_variable("WPW",inputvalue)
             n_puck = 0
+            map_before_stack = map_dic.copy()
             if any(abs(map_dic[puck][0]) < 20 and abs(map_dic[puck][1]) for puck in map_dic):
                 origin = (0,0,0)
             else:
@@ -383,9 +381,54 @@ while True:
             robot.set_rapid_variable("WPW",0)
             
         elif (inputvalue == 12):
+            print("\n --- Unstack pucks --- \n")
+            if close_gripper:
+                print("Gripper is closed, you can't create a stack")
+                robot.set_rapid_variable("WPW",0)
+                continue
+            robot.set_rapid_variable("numqr", len(map_dic))
+            robot.set_rapid_variable("index", 0)
+            robot.set_rapid_variable("WPW",inputvalue)
+            n_puck = 0
+            for i, puck in enumerate(map_dic.keys()):
+                time.sleep(1)
+                print(f"Unstacking puck {puck}")
+                robot.set_rapid_variable("dx1py", map_dic[puck][0])
+                robot.set_rapid_variable("dy1py", map_dic[puck][1])
+                robot.set_rapid_variable("dz1py", (len(map_dic) -i)* 30)
+                robot.set_rapid_variable("dx2py", map_before_stack[puck][0])
+                robot.set_rapid_variable("dy2py", map_before_stack[puck][1])
+                robot.set_rapid_variable("dz2py", map_before_stack[puck][2])
+                n_puck += 1
+                robot.set_rapid_variable("index", 1)
+                map_dic[puck] = map_before_stack[puck]
+                time.sleep(5)
+                while int(robot.get_rapid_variable("index")) == 1:
+                    time.sleep(1)
+            time.sleep(5)
+            robot.set_rapid_variable("WPW",0)
+            
+            
+        elif (inputvalue == 19):
             print("\n --- Clean mapping --- \n")
             map_dic = {}
             angle_dic = {}
+            
+        elif (inputvalue == 20):
+            # save mapping in a json file
+            import json
+            with open("mapping.json", "w") as f:
+                json.dump(map_dic, f)
+            with open("angle.json", "w") as f:
+                json.dump(angle_dic, f)
+        
+        elif (inputvalue == 21):
+            # load mapping from a json file
+            import json
+            with open("mapping.json", "r") as f:
+                map_dic = json.load(f)
+            with open("angle.json", "r") as f:
+                angle_dic = json.load(f)
                         
         else:
             print("Invalid input")
