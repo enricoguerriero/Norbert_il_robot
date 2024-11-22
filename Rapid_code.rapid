@@ -90,6 +90,7 @@ MODULE E458GripperTest
             CASE 9: takePicture;
             CASE 10: mapWithMatrices;
             CASE 11: setOrigin;
+            CASE 12: doStack;
             DEFAULT: TPWrite "Error";
             ENDTEST
         ENDWHILE 
@@ -283,6 +284,26 @@ MODULE E458GripperTest
 	        !MoveL Offs(p2, 0, 0, 10),vSlow,fine,tGripper\WObj:=wobjTableN;
             !closeGripper(FALSE);        
 	        !MoveL Offs(p2, 0, 0, puckHeight),vFast,z10,tGripper\WObj:=wobjTableN;
+            count := count + 1;
+            index := 0;
+        ENDWHILE
+    ENDPROC 
+
+    PROC unStack()
+        count:= 0;
+        MoveJ Offs(table_center, 0, 0, safeHeight),vFast,z10,tGripper\WObj:=wobjTableN;
+        WHILE count < numqr DO
+            WaitUntil (index <> 0);
+            p1.trans.x := dx1py;
+            p1.trans.y := dy1py;
+            p1.trans.z := dz1py;
+            p2.trans.x := dx2py;
+            p2.trans.y := dy2py;
+            p2.trans.z := dz2py;
+            
+            getPuck p1;
+            MoveJ Offs(p1, 0, 0, safeHeight),vFast,z10,tGripper\WObj:=wobjTableN;
+            putPuck p2;
             count := count + 1;
             index := 0;
         ENDWHILE
